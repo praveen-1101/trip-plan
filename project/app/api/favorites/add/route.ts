@@ -1,0 +1,68 @@
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { connectToDatabase } from '@/lib/mongodb';
+import { getAllTransportationOptions } from '@/lib/openroute';
+
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { placeId, placeName, placeDescription, placeLocation, placeImage, coordinates } = await req.json();
+
+    if (!placeId || !placeName || !placeLocation || !coordinates) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const { db } = await connectToDatabase();
+
+    // Check if the place is already in favorites
+    const existingFavorite = await db.collection('favorites').findOne({
+      userId: session.user.id,
+      placeId: placeId
+    });
+
+    if (existingFavorite) {
+      return NextResponse.json(
+        { error: 'Place already in favorites' },
+        { status: 400 }
+      );
+    }
+
+    // Get transportation modes
+    const transportationModes = await getAllTransportationOptions(
+      { lat: coordinates.lat, lng: coordinates.lng },
+      { lat: coordinates.lat, lng: coordinates.lng } // Using same coordinates for now
+    );
+
+    // Add to favorites with coordinates and transportation modes
+    const result = await db.collection('favorites').insertOne({
+      userId: session.user.id,
+      placeId,
+      placeName,
+      placeDescription,
+      placeLocation,
+      placeImage,
+      coordinates: {
+        lat: coordinates.lat,
+        lng: coordinates.lng
+      },
+      transportationModes,
+      createdAt: new Date()
+    });
+
+    return NextResponse.json({ success: true, id: result.insertedId });
+  } catch (error) {
+    console.error('Error adding to favorites:', error);
+    return NextResponse.json(
+      { error: 'Failed to add to favorites' },
+      { status: 500 }
+    );
+  }
+} 
