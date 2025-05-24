@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb/connect';
 import Favorite from '@/lib/mongodb/models/favorite';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { NextRequest } from 'next/server';
+import { TransportationMode } from '@/types/transportation';
 
 // Define interface for the favorite document
 interface FavoriteDocument {
@@ -30,6 +31,7 @@ interface FavoriteDocument {
     lat: number;
     lng: number;
   };
+  transportationModes?: TransportationMode[];
 }
 
 const rateLimit = new Map<string, number[]>();
@@ -81,7 +83,8 @@ export async function GET() {
         temperature: favorites[0].temperature,
         crowdLevel: favorites[0].crowdLevel,
         bestRoutes: favorites[0].bestRoutes,
-        coordinates: favorites[0].coordinates
+        coordinates: favorites[0].coordinates,
+        transportationModes: favorites[0].transportationModes
       } : 'No favorites'
     });
     
@@ -99,7 +102,10 @@ export async function GET() {
         placeImage: (favorite.placeImage && favorite.placeImage !== 'undefined') 
           ? favorite.placeImage 
           : '/placeholder.jpg',
-        coordinates: favorite.coordinates || { lat: 0, lng: 0 },
+        coordinates: {
+          lat: favorite.coordinates?.lat || 0,
+          lng: favorite.coordinates?.lng || 0
+        },
         createdAt: favorite.createdAt,
         rating: favorite.rating || 0,
         bestTimeToVisit: favorite.bestTimeToVisit || 'Anytime',
@@ -110,7 +116,8 @@ export async function GET() {
         goodFor: favorite.goodFor || [],
         temperature: favorite.temperature || 'Moderate',
         crowdLevel: favorite.crowdLevel || 'Moderate',
-        bestRoutes: favorite.bestRoutes || []
+        bestRoutes: favorite.bestRoutes || [],
+        transportationModes: favorite.transportationModes || undefined
       };
       
       console.log('Sanitized favorite data:', _id, result.placeName, result.placeLocation);
@@ -156,7 +163,8 @@ export async function POST(request: NextRequest) {
       weatherForecast, 
       crowdLevel, 
       bestRoutes,
-      coordinates
+      coordinates,
+      transportationModes
     } = body;
     
     // Ensure coordinates are properly handled
@@ -185,7 +193,8 @@ export async function POST(request: NextRequest) {
       categories: categories?.length,
       goodFor: goodFor?.length,
       bestRoutes: bestRoutes?.length,
-      coordinates: sanitizedCoordinates
+      coordinates: sanitizedCoordinates,
+      transportationModes: transportationModes?Object.keys(transportationModes).length : 'N/A'
     });
     
     if (!placeId) {
@@ -230,7 +239,8 @@ export async function POST(request: NextRequest) {
       temperature,
       weatherForecast,
       crowdLevel,
-      bestRoutes
+      bestRoutes,
+      transportationModes
     };
     
     // Save the favorite

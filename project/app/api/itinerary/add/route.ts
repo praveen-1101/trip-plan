@@ -11,27 +11,50 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { placeId, placeName, placeDescription, placeLocation, placeImage, coordinates, day } = await req.json();
+    const { placeId, placeName, placeDescription, placeLocation, placeImage, coordinates, date } = await req.json();
 
-    if (!placeId || !placeName || !placeLocation || !coordinates || !day) {
+    if (!placeId || !placeName || !placeLocation || !coordinates || !date) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
+    // Validate date
+    const selectedDate = new Date(date);
+    if (isNaN(selectedDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid date format' },
+        { status: 400 }
+      );
+    }
+
+    // Ensure the date is not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      return NextResponse.json(
+        { error: 'Please select a date in the future' },
+        { status: 400 }
+      );
+    }
+
     const { db } = await connectToDatabase();
 
-    // Check if the place is already in the itinerary for this day
+    // Check if the place is already in the itinerary for this date
     const existingItinerary = await db.collection('itinerary').findOne({
       userId: session.user.id,
       placeId: placeId,
-      day: day
+      date: {
+        $gte: new Date(selectedDate.setHours(0, 0, 0, 0)),
+        $lt: new Date(selectedDate.setHours(23, 59, 59, 999))
+      }
     });
 
     if (existingItinerary) {
       return NextResponse.json(
-        { error: 'Place already in itinerary for this day' },
+        { error: 'Place already in itinerary for this date' },
         { status: 400 }
       );
     }
@@ -55,7 +78,7 @@ export async function POST(req: Request) {
         lng: coordinates.lng
       },
       transportationModes,
-      day,
+      date: selectedDate,
       createdAt: new Date()
     });
 

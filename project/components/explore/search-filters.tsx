@@ -28,7 +28,7 @@ interface SearchFiltersProps {
     category: string;
     priceRange: number[];
     sortBy: string;
-    transportMode: string;
+    transportationMode: string;
   };
   onFilterChange: (filters: any) => void;
 }
@@ -172,8 +172,8 @@ export function SearchFilters({
           <AccordionContent>
             <div className="pt-4 space-y-2">
               <Select 
-                value={filters.transportMode}
-                onValueChange={(value) => onFilterChange({ transportMode: value })}
+                value={filters.transportationMode}
+                onValueChange={(value) => onFilterChange({ transportationMode: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Transport mode" />

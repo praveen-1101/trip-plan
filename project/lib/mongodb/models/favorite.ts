@@ -11,6 +11,29 @@ const favoriteSchema = new mongoose.Schema({
     lat: { type: Number},
     lng: { type: Number}
   },
+  transportationModes: {
+    "driving-car": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
+    "cycling-regular": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
+    "foot-walking": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
+  },
   rating: { type: Number },
   bestTimeToVisit: { type: String },
   duration: { type: String },

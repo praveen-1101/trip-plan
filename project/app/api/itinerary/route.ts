@@ -211,7 +211,10 @@ export async function GET() {
         placeDescription: item.placeDescription || 'No description available',
         placeLocation: item.placeLocation || 'Unknown Location',
         placeImage: item.placeImage || '/placeholder.jpg',
-        coordinates: item.coordinates || { lat: 0, lng: 0 },
+        coordinates: {
+          lat: item.coordinates?.lat || 0,
+          lng: item.coordinates?.lng || 0
+        },
         date: item.date,
         createdAt: item.createdAt,
         rating: item.rating || 0,

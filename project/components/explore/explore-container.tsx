@@ -19,6 +19,11 @@ const STORAGE_KEY_WEATHER = 'explore-weather';
 const STORAGE_KEY_FILTERS = 'explore-filters';
 const STORAGE_KEY_VIEW = 'explore-view';
 
+interface Coordinates {
+  lat: number;
+  lng: number; // Using lng for consistency with your ORS calls, though 'lon' might be used internally in geocoding
+}
+
 export function ExploreContainer() {
   const searchParams = useSearchParams();
   const locationParam = searchParams.get('location');
@@ -29,11 +34,12 @@ export function ExploreContainer() {
   const [attractions, setAttractions] = useState<Attraction[]>([]);
   const [activeView, setActiveView] = useState<'list' | 'map'>('list');
   const [currentWeather, setCurrentWeather] = useState<any>(null);
+  const [userCoordinates, setUserCoordinates] = useState<Coordinates | null>(null);
   const [filters, setFilters] = useState({
     category: 'all',
     priceRange: [0, 100],
     sortBy: 'popularity',
-    transportMode: 'all',
+    transportationMode: 'all', // 'all', 'driving-car', 'foot-walking', 'cycling-regular'
   });
 
   // Load saved state from localStorage on component mount
@@ -125,9 +131,11 @@ export function ExploreContainer() {
         throw new Error('Location not found');
       }
       
+      setUserCoordinates({ lat: geoResult.lat, lng: geoResult.lon });
+
       const results = await getAttractions(geoResult.lat, geoResult.lon);
       setAttractions(results);
-      
+
       if (results.length > 0 && results[0].weather) {
         setCurrentWeather(results[0].weather);
       }
@@ -188,7 +196,8 @@ export function ExploreContainer() {
           placeLocation: place.placeLocation,
           placeImage: place.placeImage,
           coordinates: place.coordinates,
-          day
+          day: day,
+          transportationModes: place.transportationModes
         }),
       });
 
@@ -266,17 +275,11 @@ export function ExploreContainer() {
                       <ListIcon className="h-4 w-4" />
                       <span className="hidden sm:inline">List View</span>
                     </TabsTrigger>
-                    {/* 
-                    <TabsTrigger value="map" className="flex items-center gap-2">
-                      <MapIcon className="h-4 w-4" />
-                      <span className="hidden sm:inline">Map View</span>
-                    </TabsTrigger> */
-                    }
                   </TabsList>
                 </div>
                 
                 <TabsContent value="list" className="mt-0">
-                  <AttractionsList attractions={attractions} />
+                  <AttractionsList attractions={attractions} userCoordinates={userCoordinates}/>
                 </TabsContent>
                 
                 <TabsContent value="map" className="mt-0">

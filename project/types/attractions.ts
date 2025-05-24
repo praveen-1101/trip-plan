@@ -1,5 +1,5 @@
 import { WeatherData } from './weather';
-import { TransportationMode } from './transportation';
+import { TransportationOption } from './transportation';
 
 export interface Attraction {
   id: string;
@@ -22,6 +22,6 @@ export interface Attraction {
   crowdLevel: number; 
   distance: string;
   bestRoutes: string[];       
-  transportOptions: TransportationMode[];
+  transportOptions: TransportationOption[];
   weather?: WeatherData;
 }

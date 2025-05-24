@@ -10,19 +10,30 @@ import { AttractionDetailDialog } from '@/components/explore/attraction-detail-d
 import { Progress } from '@/components/ui/progress';
 import { PlaceActions } from '@/components/places/place-actions';
 
-interface AttractionsListProps {
-  attractions: Attraction[];
+interface Coordinates {
+  lat: number;
+  lng: number;
 }
 
-export function AttractionsList({ attractions }: AttractionsListProps) {
+interface AttractionsListProps {
+  attractions: Attraction[];
+  userCoordinates: Coordinates | null;
+}
+
+export function AttractionsList({ attractions, userCoordinates }: AttractionsListProps) {
   const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
   const [openDetailId, setOpenDetailId] = useState<string | null>(null);
-  {attractions.map((attraction) => {
-    console.log("Attraction data being passed to PlaceActions:", {
-      name: attraction.name,
-      coordinates: attraction.coordinates,
+
+  useEffect(() => {
+    attractions.forEach((attraction) => {
+      console.log("Attraction data being passed to PlaceActions:", {
+        name: attraction.name,
+        coordinates: attraction.coordinates,
+        transportOptions: attraction.transportOptions
+      });
     });
-  })}
+  }, [attractions]);
+
   useEffect(() => {
     if (attractions.length > 0) {
       const sample = attractions[0];
@@ -43,7 +54,9 @@ export function AttractionsList({ attractions }: AttractionsListProps) {
         priceLevel: sample.priceLevel,
         rating: sample.rating,
         bestTimeToVisit: sample.bestTimeToVisit,
-        images: sample.images
+        images: sample.images,
+        transportOptions: sample.transportOptions,
+        userCoordinates: userCoordinates
       });
     }
   }, [attractions]);
@@ -173,6 +186,7 @@ export function AttractionsList({ attractions }: AttractionsListProps) {
                     crowdLevel={attraction.crowdLevel.toString()}
                     bestRoutes={attraction.bestRoutes}
                     coordinates={attraction.coordinates}
+                    transportOptions={attraction.transportOptions}
                   />
                   <Button 
                     size="sm" 
@@ -194,6 +208,7 @@ export function AttractionsList({ attractions }: AttractionsListProps) {
           onOpenChange={(open) => {
             if (!open) setOpenDetailId(null);
           }}
+          userLocation = {userCoordinates}
         />
       )}
     </div>

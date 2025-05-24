@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,21 +10,24 @@ import { format, isBefore, isAfter, startOfDay } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import {getWeatherData, getForecast} from '@/lib/api/weather';
+import { Badge } from "@/components/ui/badge";
+import { WeatherChart } from '@/components/explore/weather-chart';
+import { getAllTransportationOptions } from '@/lib/openroute';
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { WeatherChart } from '@/components/explore/weather-chart';
-import { getAllTransportationOptions } from '@/lib/openroute';
 
 interface ItineraryItem {
   _id: string;
@@ -37,23 +40,27 @@ interface ItineraryItem {
   createdAt: string;
   rating?: number;
   bestTimeToVisit?: string;
-  duration?: string;
-  distance?: string;
-  priceLevel?: number;
-  categories?: string[];
-  goodFor?: string[];
-  temperature?: string;
-  coordinates?: {
+  duration: string;
+  distance: string;
+  priceLevel: number;
+  categories: string[];
+  goodFor: string[];
+  temperature: number;
+  coordinates: {
     lat: number;
     lng: number;
   };
   crowdLevel?: string;
   bestRoutes?: string[];
-  weatherForecast?: {
-    main: {
-      temp: number;
-      humidity: number;
+  weatherForecast: {
+    main?: {
+      temp?: number;
+      humidity?: number;
     };
+    weather?: Array<{
+      description: string;
+      icon: string;
+    }>;
   };
   transportationData: {
     [key: string]: {
@@ -73,11 +80,16 @@ export default function ItineraryPage() {
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const [showFullDetails, setShowFullDetails] = useState(false);
+  const mountedRef = useRef(false);
 
-  const fetchItinerary = async () => {
-    if (status === 'authenticated') {
+  const fetchItinerary = useCallback(async () => {
+    if (status === 'authenticated' && session) {
+      console.log('Fetching itinerary data...');
+      setIsLoading(true);
+
       try {
         const response = await fetch('/api/itinerary');
+
         if (response.ok) {
           const data = await response.json();
           console.log('Fetched itinerary data:', data);
@@ -86,22 +98,33 @@ export default function ItineraryPage() {
           const processedData = data.map((item: any) => {
             console.log('Processing itinerary item:', item.placeName, 'Image:', item.placeImage);
             
+            // Check if _id is present
+            if(!item._id) {
+              console.error('Invalid item:', item);
+              return null;
+            }
+
             // Ensure all fields have proper values
             const validItem = {
               ...item,
+              _id: item._id || `temp-${Date.now()}-${Math.random()}`,
+              placeId: item.placeId || '',
               placeName: item.placeName || 'Unknown Place',
               placeDescription: item.placeDescription || 'No description available',
               placeLocation: item.placeLocation || 'Unknown Location',
               placeImage: (item.placeImage && item.placeImage !== 'undefined') ? item.placeImage : '/placeholder.jpg',
               temperature: item.temperature || 'Moderate',
-              weatherForecast: item.weatherForecast || { main: { temp: 0, humidity: 0 } },
+              weatherForecast: item.weatherForecast || { main: {}, weather: [] },
               crowdLevel: item.crowdLevel || 'Moderate',
               bestRoutes: item.bestRoutes || [],
-              rating: item.rating || 4.5,
+              rating: item.rating || 'N/A',
               bestTimeToVisit: item.bestTimeToVisit || 'Morning',
               duration: item.duration || '1-2 hours',
               distance: item.distance || 'Nearby',
-              coordinates: item.coordinates || { lat: 0, lng: 0 },
+              coordinates: {
+                lat: item.coordinates?.lat || 0,
+                lng: item.coordinates?.lng || 0
+              },
               priceLevel: item.priceLevel || 1,
               categories: item.categories || ['Tourist Spot'],
               goodFor: item.goodFor || ['Everyone'],
@@ -132,12 +155,60 @@ export default function ItineraryPage() {
       }
     } else if (status === 'unauthenticated') {
       setIsLoading(false);
+      setItinerary([]);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
     fetchItinerary();
-  }, [status]);
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [status, fetchItinerary]);
+
+  // Fetch fresh weather and forecast whenever a favorite is selected
+/* useEffect(() => {
+  const fetchWeatherAndForecast = async () => {
+    if (!selectedItem) return;
+
+    const { coordinates } = selectedItem;
+
+    try {
+      const weatherRes = await fetch(`/api/weather?lat=${coordinates.lat}&lon=${coordinates.lng}`);
+      if (!weatherRes.ok) throw new Error('Failed to fetch weather data');
+      const weatherData = await weatherRes.json();
+
+      const forecastRes = await fetch(`/api/forecast?lat=${coordinates.lat}&lon=${coordinates.lng}`);
+      if (!forecastRes.ok) throw new Error('Failed to fetch forecast data');
+      const forecastData = await forecastRes.json();
+
+      const updatedFavorite: ItineraryItem = {
+        ...selectedItem,
+        temperature: weatherData?.main?.temp || selectedItem.temperature,
+        weatherForecast: {
+          main: {
+            humidity: forecastData?.[0]?.main?.humidity,
+            temp: forecastData?.[0]?.main?.temp
+          },
+          weather: forecastData?.[0]?.weather ? [{
+            description: forecastData[0].weather.description,
+            icon: forecastData[0].weather.icon
+          }] : undefined
+        }
+      };
+      setItinerary((prev) =>
+        prev.map((fav) => (fav._id === selectedItem._id ? updatedFavorite : fav))
+      );
+      setSelectedItem(updatedFavorite);
+    } catch (error) {
+      console.error('Error fetching weather/forecast:', error);
+      toast.error('Error fetching weather information.');
+    }
+  };
+
+  fetchWeatherAndForecast();
+}, [selectedItem?.coordinates]); */
 
   const removeItineraryItem = async (itineraryId: string) => {
     if (!session) return;
@@ -196,9 +267,37 @@ export default function ItineraryPage() {
   };
 
   // Open detail dialog for an itinerary item
-  const handleViewDetail = (item: ItineraryItem) => {
-    setSelectedItem(item);
-    setOpenDetailDialog(true);
+  const handleViewDetail = async (item: ItineraryItem) => {
+    try {
+      toast.loading('Fetching latest weather info...', { id: 'weatherFetch' });
+      const weatherData = await getWeatherData(item.coordinates.lat, item.coordinates.lng);
+      const updatedItem: ItineraryItem = {
+        ...item,
+        temperature: weatherData?.main?.temp || item.temperature,
+        weatherForecast: {
+          main: {
+            humidity: weatherData?.main?.humidity,
+            temp: weatherData?.main?.temp
+          },
+          weather: weatherData?.weather ? [{
+            description: weatherData.weather[0]?.description || 'UNKNOWN',
+            icon: weatherData.weather[0]?.icon || ''
+          }] : item.weatherForecast?.weather
+        }
+      };
+      setItinerary((prev) =>
+        prev.map((fav) => (fav._id === item._id ? updatedItem : fav))
+      );
+      setSelectedItem(updatedItem);
+      setOpenDetailDialog(true);
+      toast.success('Latest weather info loaded', { id: 'weatherFetch' });
+    } catch (error) {
+      console.error('Failed to fetch weather data:', error);
+      toast.error('Failed to load latest weather info', { id: 'weatherFetch' });
+      // Even on failure, open dialog with existing data to avoid blocking UI
+      setSelectedItem(item);
+      setOpenDetailDialog(true);
+    }
   };
 
   // Group itinerary items by date

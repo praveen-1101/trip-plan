@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 
-// Define a clean schema with proper types
 const favoriteSchema = new mongoose.Schema({
   userId: {
     type: String,
@@ -68,6 +67,29 @@ const favoriteSchema = new mongoose.Schema({
     lat: { type: Number },
     lng: { type: Number }
   },
+  transportationModes: {
+    "driving-car": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
+    "cycling-regular": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
+    "foot-walking": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
+  },  
   crowdLevel: {
     type: String,
     default: 'Moderate'
@@ -75,7 +97,7 @@ const favoriteSchema = new mongoose.Schema({
   bestRoutes: {
     type: [String],
     default: []
-  }
+  },
 });
 
 // Create a compound index to prevent duplicate favorites for the same user and place

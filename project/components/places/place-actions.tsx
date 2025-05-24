@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react';
 import { Heart, Share2, CalendarPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import Calendar from 'react-calendar';
+import { TransportationOption } from '@/types/transportation'; 
+
 import 'react-calendar/dist/Calendar.css';
 import {
   Dialog,
@@ -14,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
 
 interface PlaceActionsProps {
   placeId: string;
@@ -36,6 +39,7 @@ interface PlaceActionsProps {
     lat: number;
     lng: number;
   };
+  transportOptions?: TransportationOption[];
 }
 
 export function PlaceActions({ 
@@ -56,13 +60,14 @@ export function PlaceActions({
   crowdLevel = '',
   bestRoutes = [],
   coordinates = { lat: 0, lng: 0 },
+  transportOptions,
 }: PlaceActionsProps) {
+
   const { data: session } = useSession();
   const [isFavorited, setIsFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
 
-  // Log props on component mount
   useEffect(() => {
     console.log('PlaceActions component received props:', {
       placeId,
@@ -72,8 +77,9 @@ export function PlaceActions({
       hasImage: !!placeImage,
       imageUrl: placeImage?.substring(0, 30) + '...',
       coordinates,
+      transportOptions
     });
-  }, [placeId, placeName, placeLocation, placeDescription, placeImage, temperature, crowdLevel, bestRoutes, categories, goodFor, rating, bestTimeToVisit, duration, distance, priceLevel]);
+  }, [placeId, placeName, placeLocation, placeDescription, placeImage, temperature, crowdLevel, bestRoutes, categories, goodFor, rating, bestTimeToVisit, duration, distance, priceLevel, transportOptions]);
 
   // Check initial favorite status
   useEffect(() => {
@@ -116,7 +122,8 @@ export function PlaceActions({
     const sanitizedCrowdLevel = crowdLevel || 'Moderate';
     const sanitizedBestRoutes = Array.isArray(bestRoutes) ? bestRoutes : [];
     const sanitizedCoordinates = coordinates || { lat: 0, lng: 0 };
-  
+    const sanitizedTransportOptions = transportOptions || [];
+
     console.log('Adding to favorites with data:', {
       placeId,
       name: sanitizedName,
@@ -131,7 +138,8 @@ export function PlaceActions({
       temperature: sanitizedTemperature,
       crowdLevel: sanitizedCrowdLevel,
       bestRoutes: sanitizedBestRoutes?.length,
-      coordinates: sanitizedCoordinates
+      coordinates: sanitizedCoordinates,
+      transportOptions: sanitizedTransportOptions
     });
 
     try {
@@ -155,7 +163,8 @@ export function PlaceActions({
           temperature: sanitizedTemperature,
           crowdLevel: sanitizedCrowdLevel,
           bestRoutes: sanitizedBestRoutes,
-          coordinates: sanitizedCoordinates
+          coordinates: sanitizedCoordinates,
+          transportOptions: sanitizedTransportOptions
         }),
       });
 
@@ -232,6 +241,7 @@ export function PlaceActions({
     const sanitizedCrowdLevel = crowdLevel || 'Moderate';
     const sanitizedBestRoutes = Array.isArray(bestRoutes) ? bestRoutes : [];
     const sanitizedCoordinates = coordinates || { lat: 0, lng: 0 };
+    const sanitizedTransportOptions = transportOptions || [];
     
     console.log('Adding to itinerary with data:', {
       placeId,
@@ -240,7 +250,8 @@ export function PlaceActions({
       description: sanitizedDescription?.substring(0, 20) + '...',
       image: sanitizedImage?.substring(0, 30) + '...',
       date: selectedDate.toLocaleDateString(),
-      coordinates: sanitizedCoordinates
+      coordinates: sanitizedCoordinates,
+      transportOptions: sanitizedTransportOptions
     });
     
     try {
@@ -278,7 +289,8 @@ export function PlaceActions({
           temperature: sanitizedTemperature,
           crowdLevel: sanitizedCrowdLevel,
           bestRoutes: sanitizedBestRoutes,
-          coordinates: sanitizedCoordinates
+          coordinates: sanitizedCoordinates,
+          transportOptions: sanitizedTransportOptions
         }),
       });
 

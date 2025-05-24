@@ -1,8 +1,9 @@
-export interface TransportationMode 
-{
-    mode: 'car' | 'bus' | 'walking' | 'cycling';
-    distance: number;
-    duration: number;
-    details?: string;
-    cost?: number;
+export type TransportMode = 'driving-car' | 'foot-walking' | 'cycling-regular';
+
+export interface TransportationOption {
+  mode: TransportMode;
+  distance: number;
+  duration: number;
+  details?: string;
+  cost?: number;
 }

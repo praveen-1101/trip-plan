@@ -1,5 +1,9 @@
-const OPENROUTE_API_KEY = '5b3ce3597851110001cf6248f4de9014855042b6b84ef75e5c9dc60e';
-const OPENROUTE_BASE_URL = 'https://api.openrouteservice.org/v2';
+import { toast } from "sonner";
+import { TransportMode } from "@/types/transportation";
+
+const ORS_API_KEY = process.env.NEXT_PUBLIC_OPENROUTE_API_KEY;  
+const ORS_BASE_URL = "https://api.openrouteservice.org/v2";
+
 
 interface Coordinates {
   lat: number;
@@ -10,123 +14,127 @@ interface RouteResponse {
   features: Array<{
     properties: {
       segments: Array<{
-        duration: number;
         distance: number;
+        duration: number;
       }>;
     };
   }>;
 }
 
-const TRANSPORT_PROFILES = [
-  { type: 'driving-car', name: 'Car', icon: '🚗' },
-  { type: 'driving-hgv', name: 'Bus', icon: '🚌' },
-  { type: 'foot-walking', name: 'Walking', icon: '🚶' },
-  { type: 'cycling-regular', name: 'Bicycle', icon: '🚲' }
-];
-
-export async function getTransportationModes(start: Coordinates, end: Coordinates) {
-  const results = await Promise.all(
-    TRANSPORT_PROFILES.map(async (profile) => {
-      try {
-        const response = await fetch(
-          `${OPENROUTE_BASE_URL}/directions/${profile.type}?api_key=${OPENROUTE_API_KEY}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
-            },
-            body: JSON.stringify({
-              coordinates: [
-                [start.lng, start.lat],
-                [end.lng, end.lat]
-              ],
-              format: 'json'
-            })
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${profile.name} route`);
-        }
-
-        const data: RouteResponse = await response.json();
-        const segment = data.features[0]?.properties.segments[0];
-
-        if (!segment) {
-          throw new Error(`No route found for ${profile.name}`);
-        }
-
-        // Convert duration from seconds to minutes and distance from meters to kilometers
-        const duration = Math.round(segment.duration / 60);
-        const distance = (segment.distance / 1000).toFixed(1);
-
-        return {
-          name: profile.name,
-          duration: `${duration} min`,
-          distance: `${distance} km`,
-          icon: profile.icon
-        };
-      } catch (error) {
-        console.error(`Error fetching ${profile.name} route:`, error);
-        return null;
-      }
-    })
-  );
-
-  return results.filter(Boolean);
+export interface RouteInfo {
+  distance: number;
+  duration: number;
 }
 
-export async function getPublicTransport(
+export async function getRoute(
   start: Coordinates,
-  end: Coordinates
-): Promise<Array<{ mode: string; details: string; icon: string }>> {
+  end: Coordinates,
+  mode: TransportMode = "driving-car"
+): Promise<{ distance: number; duration: number } | null> {
   try {
     const response = await fetch(
-      `${OPENROUTE_BASE_URL}/directions/public-transport?api_key=${OPENROUTE_API_KEY}&start=${start.lng},${start.lat}&end=${end.lng},${end.lat}`,
+      `${ORS_BASE_URL}/directions/${mode}?api_key=${ORS_API_KEY}&start=${start.lng},${start.lat}&end=${end.lng},${end.lat}`,
       {
         headers: {
-          'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+          "Content-Type": "application/json",
+          Accept: "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
         },
       }
     );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch public transport routes');
+      throw new Error("Failed to fetch route");
     }
 
-    const data = await response.json();
-    const routes = data.features.map((feature: any) => {
-      const segment = feature.properties.segments[0];
-      const distance = (segment.distance / 1000).toFixed(1);
-      const duration = Math.round(segment.duration / 60);
+    const data: RouteResponse = await response.json();
+    const segment = data.features[0]?.properties.segments[0];
 
-      return {
-        mode: 'Public Transport',
-        details: `${distance} km, ${duration} mins`,
-        icon: 'bus',
-        distance: parseFloat(distance),
-        duration
-      };
-    });
+    if (!segment) {
+      throw new Error("No route found");
+    }
 
-    return routes;
+    return {
+      distance: segment.distance,
+      duration: segment.duration,
+    };
   } catch (error) {
-    console.error('Error fetching public transport routes:', error);
-    return [];
+    console.error("Error fetching route:", error);
+    return null;
   }
 }
 
 export async function getAllTransportationOptions(
   start: Coordinates,
   end: Coordinates
-): Promise<Array<{ mode: string; details: string; icon: string }>> {
-  const transportModes = await getTransportationModes(start, end);
-  const publicTransport = await getPublicTransport(start, end);
+): Promise<Record<TransportMode, { distance: number; duration: number } | null>> {
+  const modes: TransportMode[] = ["driving-car", "cycling-regular", "foot-walking"];
+  const results: Record<TransportMode, { distance: number; duration: number } | null> = {
+    "driving-car": null,
+    "cycling-regular": null,
+    "foot-walking": null,
+  };
 
-  return [...transportModes, ...publicTransport].map(mode => ({
-    mode: mode.name,
-    details: `${mode.distance}, ${mode.duration}`,
-    icon: mode.icon
-  }));
+  await Promise.all(
+    modes.map(async (mode) => {
+      try {
+        const route = await getRoute(start, end, mode);
+        results[mode] = route;
+      } catch (error) {
+        console.error(`Error fetching route for ${mode}:`, error);
+        results[mode] = null;
+      }
+    })
+  );
+
+  return results;
+}
+
+export function formatDistance(meters: number): string {
+  if (meters < 1000) {
+    return `${Math.round(meters)}m`;
+  }
+  return `${(meters / 1000).toFixed(1)}km`;
+}
+
+export function formatDuration(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 } 
+
+
+// Function to determine the recommended transportation mode based on distance
+export function getRecommendedMode(routes: Record<TransportMode, RouteInfo | null>): TransportMode | null {
+  if (!routes) return null;
+  
+  // If walking distance is less than 2km, recommend walking
+  if (routes["foot-walking"]?.distance && routes["foot-walking"].distance < 2000) {
+    return "foot-walking";
+  }
+  
+  // If cycling distance is less than 5km, recommend cycling
+  if (routes["cycling-regular"]?.distance && routes["cycling-regular"].distance < 5000) {
+    return "cycling-regular";
+  }
+  
+  // For longer distances, recommend car
+  return "driving-car";
+}
+
+// Map transportation mode to readable name
+export function getTransportModeName(mode: TransportMode): string {
+  switch (mode) {
+    case "foot-walking":
+      return "Walking";
+    case "cycling-regular":
+      return "Cycling";
+    case "driving-car":
+      return "Driving";
+    default:
+      return "Unknown";
+  }
+}

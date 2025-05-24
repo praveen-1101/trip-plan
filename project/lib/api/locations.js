@@ -2,8 +2,9 @@
 
 import { getTouristPlaces } from './places';
 import { getWeatherData, getForecast } from './weather';
+import { getRoute, formatDistance, formatDuration, RouteInfo, getAllTransportationOptions, getRecommendedMode, getTransportModeName } from '@/lib/openroute';
 
-const OPENROUTE_API_KEY = '5b3ce3597851110001cf6248f4de9014855042b6b84ef75e5c9dc60e';
+const OPENROUTE_API_KEY = process.env.NEXT_PUBLIC_OPENROUTE_API_KEY;
 
 export async function geocodeLocation(query) {
   try {
@@ -74,13 +75,12 @@ async function calculateDistance(fromLat, fromLon, toLat, toLon) {
 
 export async function getAttractions(lat, lon, radius = 5000) {
   try {
+    const userCoordinates = { lat, lon };
     // Get tourist places with enriched data
     const places = await getTouristPlaces(lat, lon);
     console.log("places", places);
-    // Get current weather for the location
-    const weatherData = await getWeatherData(lat, lon);
     
-    // Calculate distances and add weather data
+    // Calculate distances and add weather data and transportationOptions
     const attractionsWithData = await Promise.all(places.map(async (place) => {
       try {
         const distance = await calculateDistance(
@@ -93,17 +93,38 @@ export async function getAttractions(lat, lon, radius = 5000) {
         const placeWeather = await getWeatherData(place.coordinates.lat, place.coordinates.lng);
         const placeForecast = await getForecast(place.coordinates.lat, place.coordinates.lng);
         
+        let transportationOptions = [];
+        if(userCoordinates && place.coordinates) {
+          try{
+            const allRoutesRecord = await getAllTransportationOptions(userCoordinates, place.coordinates);
+            transportationOptions = Object.entries(allRoutesRecord)
+            .filter(([, routeInfo]) =>routeInfo !== null)
+            .map(([mode, routeInfo]) => ({
+              mode,
+              distance: routeInfo.distance,
+              duration: routeInfo.duration,
+              details: routeInfo.details,
+            }));
+          } catch (error) {
+            console.error(`Error getting transportation options for ${place.name}:`, routeError);
+          }
+        }
+
         return {
           ...place,
           distance,
           weather: {
             ...placeWeather,
           },
-          forecast: placeForecast
+          forecast: placeForecast,
+          transportOptions: transportationOptions
         };
       } catch (error) {
         console.error('Error processing attraction:', error);
-        return place;
+        return {
+          ...place,
+          transportOptions: [],
+        }
       }
     }));
     

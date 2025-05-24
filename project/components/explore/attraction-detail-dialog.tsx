@@ -1,6 +1,16 @@
 'use client';
 
 import { Attraction } from '@/types/attractions';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { TransportMode } from '@/types/transportation';
+import { Progress } from '@/components/ui/progress';
+import { WeatherChart } from '@/components/explore/weather-chart';
+import { PlaceActions } from '@/components/places/place-actions';
+import { useEffect, useState, useMemo } from 'react';
+
 import {
   Dialog,
   DialogContent,
@@ -8,47 +18,53 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { 
   Star, 
   MapPin, 
   Clock, 
   Calendar, 
   Users, 
-  Droplets, 
-  Sun, 
-  Thermometer, 
-  Bus, 
+  Thermometer,
   Car, 
-  Train,
   Footprints,
-  Heart,
-  Share2,
-  ExternalLink,
-  ArrowRight
+  Bike,
+  ArrowRight,
 } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { WeatherChart } from '@/components/explore/weather-chart';
-import { PlaceActions } from '@/components/places/place-actions';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
+
+import {
+ formatDistance, 
+ formatDuration, 
+ RouteInfo, 
+ getAllTransportationOptions, 
+ getRecommendedMode, 
+ getTransportModeName 
+} from '@/lib/openroute';
+
+interface Coordinates {
+  lat: number;
+  lng: number;
+}
 
 interface AttractionDetailDialogProps {
   attraction: Attraction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userLocation: Coordinates | null;
 }
 
 export function AttractionDetailDialog({
   attraction,
   open,
   onOpenChange,
+  userLocation
 }: AttractionDetailDialogProps) {
-  
+
+  const [transportData, setTransportData] = useState<Record<TransportMode, RouteInfo | null> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [recommendedMode, setRecommendedMode] = useState<TransportMode | null>(null);
+
   // Log attraction data when dialog opens
   useEffect(() => {
     if (open) {
@@ -59,9 +75,56 @@ export function AttractionDetailDialog({
         description: attraction.description?.substring(0, 30) + '...',
         hasImages: attraction.images?.length > 0,
         firstImageUrl: attraction.images[0]?.substring(0, 30) + '...',
+        transportOptions: attraction.transportOptions
       });
     }
   }, [open, attraction]);
+
+  useEffect(() => {
+    async function fetchRoutes() {
+      if(!open || !userLocation) {
+        setTransportData(null);
+        setRecommendedMode(null);
+        setLoading(false);  
+        setError(null);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Call the new getAllTransportationOptions function
+        const fetchedData = await getAllTransportationOptions(userLocation, attraction.coordinates);
+        setTransportData(fetchedData); // Store the entire record
+
+        // Determine the recommended mode based on the fetched data
+        setRecommendedMode(getRecommendedMode(fetchedData));
+
+      } catch (err) {
+        console.error('Failed to fetch routes:', err);
+        setError('Failed to load transportation options');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchRoutes();
+  }, [open, userLocation,attraction.coordinates]);
+
+  // Helper function to get the icon based on the TransportMode string
+  const getTransportIcon = (mode: TransportMode) => {
+    switch (mode) {
+      case 'foot-walking':
+        return <Footprints className="h-5 w-5 text-primary" />;
+      case 'cycling-regular':
+        return <Bike className="h-5 w-5 text-primary" />;
+      case 'driving-car':
+        return <Car className="h-5 w-5 text-primary" />;
+      default:
+        return <ArrowRight className="h-5 w-5 text-primary" />;
+    }
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,6 +170,7 @@ export function AttractionDetailDialog({
                   crowdLevel={attraction.crowdLevel.toString()}
                   bestRoutes={attraction.bestRoutes}
                   coordinates={attraction.coordinates}
+                  transportOptions={attraction.transportOptions}
                 />
               </div>
             </div>
@@ -223,100 +287,157 @@ export function AttractionDetailDialog({
                         />
                       </CardContent>
                     </Card>
-                    
-                   {/*  <div className="grid grid-cols-2 gap-4 mb-4">
-                      <Card>
-                        <CardContent className="p-4 flex flex-col items-center">
-                          <Users className="h-8 w-8 mb-2 text-primary" />
-                          <h4 className="text-sm font-semibold text-center">Lowest Crowds</h4>
-                          <p className="text-xs text-center text-muted-foreground">Weekday mornings, off-season</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="p-4 flex flex-col items-center">
-                          <Sun className="h-8 w-8 mb-2 text-primary" />
-                          <h4 className="text-sm font-semibold text-center">Best Weather</h4>
-                          <p className="text-xs text-center text-muted-foreground">April to June, September</p>
-                        </CardContent>
-                      </Card>
-                    </div> */}
-
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="routes" className="space-y-4">
                   <div>
                     <h3 className="text-sm font-semibold mb-2">Getting There</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Multiple transportation options available to reach {attraction.name}.
+                      Transportation options available to reach {attraction.name} from your current location.
                     </p>
-                    
-                    <div className="space-y-3">
+                    {loading ? (
+                      <div className="space-y-3">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Card key={i}>
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-primary/10 p-2 rounded-full animate-pulse">
+                                  <div className="h-5 w-5" />
+                                </div>
+                                <div className="flex-grow">
+                                  <div className="h-4 bg-gray-200 rounded w-24 mb-2 animate-pulse" />
+                                  <div className="h-3 bg-gray-200 rounded w-32 animate-pulse" />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : error ? (
                       <Card>
                         <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-primary/10 p-2 rounded-full">
-                              <Footprints className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-grow">
-                              <h4 className="text-sm font-semibold">Walking</h4>
-                              <p className="text-xs text-muted-foreground">15 min (0.8 miles)</p>
-                            </div>
-                            <Badge className="ml-auto">Recommended</Badge>
-                          </div>
+                          <p className="text-sm text-red-500">{error}</p>
                         </CardContent>
                       </Card>
-                      
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-primary/10 p-2 rounded-full">
-                              <Bus className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-grow">
-                              <h4 className="text-sm font-semibold">Public Transit</h4>
-                              <p className="text-xs text-muted-foreground">25 min (Bus #42, every 10 min)</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-primary/10 p-2 rounded-full">
-                              <Car className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-grow">
-                              <h4 className="text-sm font-semibold">Ding</h4>
-                              <p className="text-xs text-muted-foreground">10 min (2.1 miles), Parking: $10/day</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-primary/10 p-2 rounded-full">
-                              <Train className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-grow">
-                              <h4 className="text-sm font-semibold">Train + Walking</h4>
-                              <p className="text-xs text-muted-foreground">20 min (Metro Line B to Central Station + 5 min walk)</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {transportData && Object.keys(transportData).length > 0 ? (
+                          (Object.keys(transportData) as TransportMode[]).map((mode) => {
+                            const route = transportData[mode];
+                            if (route) {
+                              return (
+                                <Card key={mode}>
+                                  <CardContent className="p-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="bg-primary/10 p-2 rounded-full">
+                                        {getTransportIcon(mode)}
+                                      </div>
+                                      <div className="flex-grow">
+                                        <h4 className="text-sm font-semibold">{getTransportModeName(mode)}</h4>
+                                        <p className="text-xs text-muted-foreground">
+                                          {formatDuration(route.duration)} ({formatDistance(route.distance)})
+                                        </p>
+                                      </div>
+                                      {mode === recommendedMode && (
+                                        <Badge className="ml-auto">Recommended</Badge>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            }
+                            return null; // Don't render if route is null
+                          })
+                        ) : (
+                          <Card>
+                            <CardContent className="p-4">
+                              <p className="text-sm text-muted-foreground text-center">
+                                No transportation routes found for this attraction from your location.
+                              </p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
+
+                {/* <TabsContent value="routes" className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold mb-2">Getting There</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Transportation options available to reach {attraction.name} from your current location.
+                    </p>
+                
+                    {loading ? ( 
+                      <div className="space-y-3">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Card key={i}>
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-primary/10 p-2 rounded-full animate-pulse">
+                                                  <div className="h-5 w-5" /> 
+                                </div>
+                                <div className="flex-grow">
+                                  <div className="h-4 bg-gray-200 rounded w-24 mb-2 animate-pulse" /> 
+                                  <div className="h-3 bg-gray-200 rounded w-32 animate-pulse" /> 
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : error ? ( 
+                      <Card>
+                        <CardContent className="p-4">
+                          <p className="text-sm text-red-500 text-center">{error}</p>
+                        </CardContent>
+                      </Card>
+                    ) : ( 
+                      <div className="space-y-3">
+                        {transportData && Object.keys(transportData).length > 0 ? (
+                          (Object.keys(transportData) as TransportMode[]).map((mode) => {
+                            const route = transportData[mode];
+                            if (route) {
+                              return (
+                                <Card key={mode}>
+                                  <CardContent className="p-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="bg-primary/10 p-2 rounded-full">
+                                        {getTransportIcon(mode)}
+                                      </div>
+                                      <div className="flex-grow">
+                                        <h4 className="text-sm font-semibold">{getTransportModeName(mode)}</h4>
+                                        <p className="text-xs text-muted-foreground">
+                                          {formatDuration(route.duration)} ({formatDistance(route.distance)})
+                                        </p>
+                                      </div>
+                                      {mode === recommendedMode && (
+                                        <Badge className="ml-auto">Recommended</Badge>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            }
+                            return null;
+                          })
+                        ) : ( 
+                          <Card>
+                            <CardContent className="p-4">
+                              <p className="text-sm text-muted-foreground text-center">
+                                No transportation routes found for this attraction from your location.
+                              </p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent> */}
               </Tabs>
             </ScrollArea>
-            
-            <div className="p-4 border-t">
-              {/* Removed redundant action buttons since PlaceActions component already handles these functions */}
-            </div>
           </div>
         </div>
       </DialogContent>

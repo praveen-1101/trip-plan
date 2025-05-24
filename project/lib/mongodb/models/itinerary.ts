@@ -11,12 +11,18 @@ interface ItineraryItem {
     lat: number;
     lng: number;
   };
+  transportationModes: {
+    "driving-car": { distance: number; duration: number } | null;
+    "cycling-regular": { distance: number; duration: number } | null;
+    "foot-walking": { distance: number; duration: number } | null;
+  };
   date: Date;
   createdAt: Date;
   rating: number;
   bestTimeToVisit: string;
   duration: string;
   distance: string;
+  crowdLevel: string;
   priceLevel: number;
   categories: string[];
   goodFor: string[];
@@ -30,14 +36,38 @@ const itinerarySchema = new mongoose.Schema<ItineraryItem>({
   placeLocation: { type: String },
   placeImage: { type: String },
   coordinates: {
-    lat: { type: Number },
-    lng: { type: Number },
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
+  },
+  transportationModes: {
+    "driving-car": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
+    "cycling-regular": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
+    "foot-walking": {
+      type: {
+        distance: { type: Number },
+        duration: { type: Number },
+      },
+      default: null,
+    },
   },
   date: { type: Date, required: true },
   createdAt: { type: Date, default: Date.now },
   rating: { type: Number },
   bestTimeToVisit: { type: String },
   duration: { type: String },
+  crowdLevel: { type: String },
   distance: { type: String },
   priceLevel: { type: Number },
   categories: { type: [String], default: [] },

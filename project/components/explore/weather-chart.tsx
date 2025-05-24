@@ -17,6 +17,9 @@ export function WeatherChart({ lat, lon, lng }: WeatherChartProps) {
   const [forecastData, setForecastData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const CACHE_KEY = `weather-forecast-${lat}-${lon}`;
+  const CACHE_DURATION = 1000 * 60 * 60 * 6; // 6 hours
   
   useEffect(() => {
     async function loadForecastData() {
@@ -26,6 +29,25 @@ export function WeatherChart({ lat, lon, lng }: WeatherChartProps) {
         
         if (!isValidCoordinate(lat, longitude)) {
           throw new Error('Invalid coordinates provided');
+        }
+
+          // Try to get cached data
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const { timestamp, data, lat: cachedLat, lon: cachedLon } = parsed;
+  
+          // Check if cached data is for the same coords and still fresh
+          if (
+            cachedLat === lat &&
+            cachedLon === longitude &&
+            Date.now() - timestamp < CACHE_DURATION
+          ) {
+            setForecastData(data);
+            setError(null);
+            setLoading(false);
+            return;
+          }
         }
 
         const forecast = await getForecast(lat, longitude);
@@ -57,6 +79,12 @@ export function WeatherChart({ lat, lon, lng }: WeatherChartProps) {
         if (processedData.length === 0) {
           throw new Error('No valid weather data available');
         }
+        
+        // Cache the new data with timestamp and coords
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ timestamp: Date.now(), data: processedData, lat, lon: longitude })
+        );
         
         setForecastData(processedData);
         setError(null);

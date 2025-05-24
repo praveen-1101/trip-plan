@@ -51,7 +51,7 @@ interface Favorite {
     lat: number;
     lng: number;
   };
-  transportationData: {
+  transportationModes: {
     [key: string]: {
       distance: number;
       duration: number;
@@ -124,7 +124,7 @@ export default function FavoritesPage() {
             placeImage: (favorite.placeImage && favorite.placeImage !== 'undefined') 
               ? favorite.placeImage 
               : '/placeholder.jpg',
-            rating: favorite.rating || 4.5,
+            rating: favorite.rating || 'N/A',
             bestTimeToVisit: favorite.bestTimeToVisit || 'Morning',
             duration: favorite.duration || '1-2 hours',
             distance: favorite.distance || 'Nearby',
@@ -139,14 +139,15 @@ export default function FavoritesPage() {
               lat: favorite.coordinates.lat || 0,
               lng: favorite.coordinates.lng || 0
             },
-            transportationData: favorite.transportationData || {}
+            transportationModes: favorite.transportationModes || {}
           };
           // Log the processed data
           console.log('Processed favorite:', {
             id: validItem._id,
             name: validItem.placeName,
             location: validItem.placeLocation,
-            coordinates: validItem.coordinates
+            coordinates: validItem.coordinates,
+            transportationModes: validItem.transportationModes
           });
           
           return validItem;
@@ -176,7 +177,7 @@ export default function FavoritesPage() {
   }, [fetchFavorites, refreshKey]);
 
   // Fetch fresh weather and forecast whenever a favorite is selected
-useEffect(() => {
+/* useEffect(() => {
   const fetchWeatherAndForecast = async () => {
     if (!selectedFavorite) return;
 
@@ -191,11 +192,24 @@ useEffect(() => {
       if (!forecastRes.ok) throw new Error('Failed to fetch forecast data');
       const forecastData = await forecastRes.json();
 
-      setSelectedFavorite(prev => prev ? {
-        ...prev,
-        temperature: weatherData?.main?.temp || prev.temperature,
-        weatherForecast: forecastData || prev.weatherForecast,
-      } : prev);
+      const updatedFavorite: Favorite = {
+        ...selectedFavorite,
+        temperature: weatherData?.main?.temp || selectedFavorite.temperature,
+        weatherForecast: {
+          main: {
+            humidity: forecastData?.[0]?.main?.humidity,
+            temp: forecastData?.[0]?.main?.temp
+          },
+          weather: forecastData?.[0]?.weather ? [{
+            description: forecastData[0].weather.description,
+            icon: forecastData[0].weather.icon
+          }] : undefined
+        }
+      };
+      setFavorites((prev) =>
+        prev.map((fav) => (fav._id === selectedFavorite._id ? updatedFavorite : fav))
+      );
+      setSelectedFavorite(updatedFavorite);
     } catch (error) {
       console.error('Error fetching weather/forecast:', error);
       toast.error('Error fetching weather information.');
@@ -203,7 +217,7 @@ useEffect(() => {
   };
 
   fetchWeatherAndForecast();
-}, [selectedFavorite?.coordinates]);
+}, [selectedFavorite?.coordinates]); */
 
 
   // Listen for favorites updates
@@ -305,11 +319,19 @@ useEffect(() => {
     try {
     toast.loading('Fetching latest weather info...', { id: 'weatherFetch' });
     const weatherData = await getWeatherData(favorite.coordinates.lat, favorite.coordinates.lng);
-    const forecastData = await getForecast(favorite.coordinates.lat, favorite.coordinates.lng);
     const updatedFavorite: Favorite = {
       ...favorite,
       temperature: weatherData?.main?.temp || favorite.temperature,
-      weatherForecast: forecastData || favorite.weatherForecast,
+      weatherForecast: {
+        main: {
+          humidity: weatherData?.main?.humidity,
+          temp: weatherData?.main?.temp
+        },
+        weather: weatherData?.weather ? [{
+          description: weatherData.weather[0]?.description || 'UNKNOWN',
+          icon: weatherData.weather[0]?.icon || ''
+        }] : favorite.weatherForecast?.weather
+      }
     };
     setFavorites((prev) =>
       prev.map((fav) => (fav._id === favorite._id ? updatedFavorite : fav))
@@ -485,16 +507,15 @@ useEffect(() => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    {favorite.transportationData && Object.entries(favorite.transportationData).map(([mode, data]) => (
+                    {favorite.transportationModes && Object.entries(favorite.transportationModes).map(([mode, data]) => (
                       <div key={mode} className="flex items-center gap-2">
                         <div className="bg-primary/10 p-2 rounded-full">
-                          {mode === 'car' && <Car className="h-4 w-4 text-primary" />}
-                          {mode === 'bus' && <Bus className="h-4 w-4 text-primary" />}
-                          {mode === 'walking' && <Footprints className="h-4 w-4 text-primary" />}
-                          {mode === 'cycling' && <Bike className="h-4 w-4 text-primary" />}
+                          {mode === 'driving-car' && <Car className="h-4 w-4 text-primary" />}
+                          {mode === 'footwalking' && <Footprints className="h-4 w-4 text-primary" />}
+                          {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-primary" />}
                         </div>
                         <div>
-                          <p className="text-sm font-medium capitalize">{mode}</p>
+                        <p className="text-sm font-medium capitalize">{mode.replace('-', ' ').replace('driving ', 'car ').replace('foot ', 'walking ').replace('cycling ', 'bike ')}</p> {/* Clean up mode names for display */}
                           <p className="text-sm text-muted-foreground">
                             {data.distance}km • {data.duration}min
                           </p>
@@ -737,6 +758,27 @@ useEffect(() => {
                       </div>
                     </div>
                   )}
+
+                  {selectedFavorite.transportationModes && Object.entries(selectedFavorite.transportationModes).length > 0 && (
+                    <div>
+                      <h3 className="text-md font-semibold mb-3">Transportation Options</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {Object.entries(selectedFavorite.transportationModes).map(([mode, data]) => {
+                        return (
+                        <div key={mode} className="bg-background/50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          {mode === 'driving-car' && <Car className="h-4 w-4 text-primary" />}
+                          {mode === 'foot-walking' && <Footprints className="h-4 w-4 text-primary" />}
+                          {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-primary" />}
+                          <span className="font-medium capitalize">{mode.replace('-', ' ').replace('driving ', 'car ').replace('foot ', 'walking ').replace('cycling ', 'bike ')}</span>
+                        </div>
+                          <p className="text-sm text-muted-foreground">{data.distance.toFixed(1)}km • {Math.round(data.duration / 60)}min</p>
+                        </div>
+                        );
+                       })}
+                      </div>
+                    </div>
+                   )}
                   
                   <div className="pt-4 flex justify-end">
                     <Button 
