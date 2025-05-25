@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Heart, Share2, CalendarPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import Calendar from 'react-calendar';
-import { TransportationOption } from '@/types/transportation'; 
+import { TransportationOption, TransportMode } from '@/types/transportation'; 
 
 import 'react-calendar/dist/Calendar.css';
 import {
@@ -39,7 +39,7 @@ interface PlaceActionsProps {
     lat: number;
     lng: number;
   };
-  transportOptions?: TransportationOption[];
+  transportOptions: TransportationOption[];
 }
 
 export function PlaceActions({ 
@@ -77,7 +77,7 @@ export function PlaceActions({
       hasImage: !!placeImage,
       imageUrl: placeImage?.substring(0, 30) + '...',
       coordinates,
-      transportOptions
+      transportOptions,
     });
   }, [placeId, placeName, placeLocation, placeDescription, placeImage, temperature, crowdLevel, bestRoutes, categories, goodFor, rating, bestTimeToVisit, duration, distance, priceLevel, transportOptions]);
 
@@ -100,7 +100,7 @@ export function PlaceActions({
 
   const handleFavorite = async () => {
     if (!session) {
-      toast.error('Please sign in to save favorites');
+      toast.error('Please sign in to add places to favorites');
       return;
     }
 
@@ -122,7 +122,7 @@ export function PlaceActions({
     const sanitizedCrowdLevel = crowdLevel || 'Moderate';
     const sanitizedBestRoutes = Array.isArray(bestRoutes) ? bestRoutes : [];
     const sanitizedCoordinates = coordinates || { lat: 0, lng: 0 };
-    const sanitizedTransportOptions = transportOptions || [];
+    const sanitizedTransportOptions = Array.isArray(transportOptions) ? transportOptions : [];
 
     console.log('Adding to favorites with data:', {
       placeId,
@@ -241,7 +241,7 @@ export function PlaceActions({
     const sanitizedCrowdLevel = crowdLevel || 'Moderate';
     const sanitizedBestRoutes = Array.isArray(bestRoutes) ? bestRoutes : [];
     const sanitizedCoordinates = coordinates || { lat: 0, lng: 0 };
-    const sanitizedTransportOptions = transportOptions || [];
+    const sanitizedTransportOptions = Array.isArray(transportOptions) ? transportOptions : [];
     
     console.log('Adding to itinerary with data:', {
       placeId,
@@ -290,7 +290,17 @@ export function PlaceActions({
           crowdLevel: sanitizedCrowdLevel,
           bestRoutes: sanitizedBestRoutes,
           coordinates: sanitizedCoordinates,
-          transportOptions: sanitizedTransportOptions
+          transportData: sanitizedTransportOptions.reduce<Record<TransportMode, { distance: number; duration: number }>>((acc, option) => {
+            acc[option.mode] = {
+              distance: option.distance,
+              duration: option.duration
+            };
+            return acc;
+          }, {
+            'driving-car': { distance: 0, duration: 0 },
+            'foot-walking': { distance: 0, duration: 0 },
+            'cycling-regular': { distance: 0, duration: 0 }
+          })
         }),
       });
 

@@ -1,8 +1,8 @@
 'use client';
 
-const FOURSQUARE_API_KEY = 'fsq3lF8pcZmYpOvbyqVk+wfqzS4387OBq4uSwI71A1mSWfY=';
-const OPENTRIPMAP_API_KEY = '5ae2e3f221c38a28845f05b625ae2c22b97e228470d9ab27d2b3783d';
-const OPENROUTE_API_KEY = '5b3ce3597851110001cf6248f4de9014855042b6b84ef75e5c9dc60e';
+const FOURSQUARE_API_KEY = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY;
+const OPENTRIPMAP_API_KEY = process.env.NEXT_PUBLIC_OPENTRIPMAP_API_KEY;
+const OPENROUTE_API_KEY = process.env.NEXT_PUBLIC_OPENROUTE_API_KEY;
 
 export async function getTouristPlaces(lat, lon, radius = 5000, category = 'all') {
   try {
@@ -17,7 +17,7 @@ export async function getTouristPlaces(lat, lon, radius = 5000, category = 'all'
       const openTripData = await openTripResponse.json();
       
       const startIndex = Math.floor(Math.random() * Math.max(0, openTripData.length - 10));
-      const selectedPlaces = openTripData.slice(startIndex, startIndex + 10);
+      const selectedPlaces = openTripData.slice(startIndex, startIndex + 1);
       
       for (const place of selectedPlaces) {
         const detailResponse = await fetch(
@@ -39,7 +39,7 @@ export async function getTouristPlaces(lat, lon, radius = 5000, category = 'all'
     }
 
     const fsResponse = await fetch(
-      `https://api.foursquare.com/v3/places/search?ll=${lat},${lon}&radius=${radius}&categories=${category === 'all' ? '16000' : category}&limit=50`,
+      `https://api.foursquare.com/v3/places/search?ll=${lat},${lon}&radius=${radius}&categories=${category === 'all' ? '16000' : category}&limit=40`,
       {
         headers: {
           'Authorization': FOURSQUARE_API_KEY,
@@ -52,7 +52,7 @@ export async function getTouristPlaces(lat, lon, radius = 5000, category = 'all'
       const fsData = await fsResponse.json();
       
       const startIndex = Math.floor(Math.random() * Math.max(0, fsData.results.length - 10));
-      const selectedPlaces = fsData.results.slice(startIndex, startIndex + 10);
+      const selectedPlaces = fsData.results.slice(startIndex, startIndex + 1);
       
       places = await Promise.all(selectedPlaces.map(async (place) => {
         const photos = await getPlacePhotos(place.fsq_id, place.name, place.location.formatted_address);
@@ -97,7 +97,7 @@ export async function getTouristPlaces(lat, lon, radius = 5000, category = 'all'
           goodFor: ['Sightseeing', 'Photography', 'Culture'],
           crowdLevel: crowdData.crowdLevel,
           distance: '0 km',
-          transportOptions: ['Walking', 'Public Transit', 'Driving']
+          /* transportOptions: ['Walking', 'Public Transit', 'Driving']  */
         };
       }));
     }

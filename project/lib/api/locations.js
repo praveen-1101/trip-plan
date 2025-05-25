@@ -3,6 +3,7 @@
 import { getTouristPlaces } from './places';
 import { getWeatherData, getForecast } from './weather';
 import { getRoute, formatDistance, formatDuration, RouteInfo, getAllTransportationOptions, getRecommendedMode, getTransportModeName } from '@/lib/openroute';
+import {TransportMode} from '@/types/transportation';
 
 const OPENROUTE_API_KEY = process.env.NEXT_PUBLIC_OPENROUTE_API_KEY;
 
@@ -38,7 +39,7 @@ export async function geocodeLocation(query) {
   }
 }
 
-async function calculateDistance(fromLat, fromLon, toLat, toLon) {
+/* async function calculateDistance(fromLat, fromLon, toLat, toLon) {
   try {
     const response = await fetch(
       `https://api.openrouteservice.org/v2/directions/driving-car?start=${fromLon},${fromLat}&end=${toLon},${toLat}`,
@@ -71,45 +72,37 @@ async function calculateDistance(fromLat, fromLon, toLat, toLon) {
     const distance = R * c;
     return `${distance.toFixed(1)} km`;
   }
-}
+} */
 
-export async function getAttractions(lat, lon, radius = 5000) {
+export async function getAttractions(lat, lng, radius = 5000) {
   try {
-    const userCoordinates = { lat, lon };
-    // Get tourist places with enriched data
-    const places = await getTouristPlaces(lat, lon);
+    const userCoordinates = { lat, lng };
+
+    const places = await getTouristPlaces(lat, lng);
     console.log("places", places);
     
     // Calculate distances and add weather data and transportationOptions
     const attractionsWithData = await Promise.all(places.map(async (place) => {
       try {
-        const distance = await calculateDistance(
-          lat, 
-          lon, 
-          place.coordinates.lat,
-          place.coordinates.lng
-        );
+
+        /* const distance = await calculateDistance(lat, lon, place.coordinates.lat,place.coordinates.lng); */
+        const [allRoutesRecord, placeWeather, placeForecast] = await Promise.all([
+        getAllTransportationOptions(userCoordinates, place.coordinates),
+        getWeatherData(place.coordinates.lat, place.coordinates.lng),
+        getForecast(place.coordinates.lat, place.coordinates.lng),
+        ]);
+
         
-        const placeWeather = await getWeatherData(place.coordinates.lat, place.coordinates.lng);
-        const placeForecast = await getForecast(place.coordinates.lat, place.coordinates.lng);
+        const drivingRoute = allRoutesRecord['driving-car'];
+        const distance = drivingRoute ? formatDistance(drivingRoute.distance) : null;
         
-        let transportationOptions = [];
-        if(userCoordinates && place.coordinates) {
-          try{
-            const allRoutesRecord = await getAllTransportationOptions(userCoordinates, place.coordinates);
-            transportationOptions = Object.entries(allRoutesRecord)
-            .filter(([, routeInfo]) =>routeInfo !== null)
+        const transportationOptions = Object.entries(allRoutesRecord)
+            .filter(([, routeInfo]) => routeInfo && routeInfo.distance && routeInfo.duration)
             .map(([mode, routeInfo]) => ({
-              mode,
+              mode: mode,
               distance: routeInfo.distance,
               duration: routeInfo.duration,
-              details: routeInfo.details,
             }));
-          } catch (error) {
-            console.error(`Error getting transportation options for ${place.name}:`, routeError);
-          }
-        }
-
         return {
           ...place,
           distance,
@@ -123,6 +116,7 @@ export async function getAttractions(lat, lon, radius = 5000) {
         console.error('Error processing attraction:', error);
         return {
           ...place,
+          distance: null,
           transportOptions: [],
         }
       }

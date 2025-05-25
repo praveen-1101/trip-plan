@@ -39,7 +39,7 @@ export function ExploreContainer() {
     category: 'all',
     priceRange: [0, 100],
     sortBy: 'popularity',
-    transportationMode: 'all', // 'all', 'driving-car', 'foot-walking', 'cycling-regular'
+    transportationMode: 'all',
   });
 
   // Load saved state from localStorage on component mount
@@ -136,6 +136,8 @@ export function ExploreContainer() {
       const results = await getAttractions(geoResult.lat, geoResult.lon);
       setAttractions(results);
 
+      console.log("working explore:", results);
+      
       if (results.length > 0 && results[0].weather) {
         setCurrentWeather(results[0].weather);
       }
@@ -152,64 +154,6 @@ export function ExploreContainer() {
 
   const handleViewChange = (view: 'list' | 'map') => {
     setActiveView(view);
-  };
-
-  const handleAddToFavorites = async (place: any) => {
-    try {
-      const response = await fetch('/api/favorites/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          placeId: place.placeId,
-          placeName: place.placeName,
-          placeDescription: place.placeDescription,
-          placeLocation: place.placeLocation,
-          placeImage: place.placeImage,
-          coordinates: place.coordinates
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add to favorites');
-      }
-
-      toast.success('Added to favorites');
-    } catch (error) {
-      console.error('Error adding to favorites:', error);
-      toast.error('Failed to add to favorites');
-    }
-  };
-
-  const handleAddToItinerary = async (place: any, day: number) => {
-    try {
-      const response = await fetch('/api/itinerary/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          placeId: place.placeId,
-          placeName: place.placeName,
-          placeDescription: place.placeDescription,
-          placeLocation: place.placeLocation,
-          placeImage: place.placeImage,
-          coordinates: place.coordinates,
-          day: day,
-          transportationModes: place.transportationModes
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add to itinerary');
-      }
-
-      toast.success(`Added to day ${day} of your itinerary`);
-    } catch (error) {
-      console.error('Error adding to itinerary:', error);
-      toast.error('Failed to add to itinerary');
-    }
   };
 
   return (

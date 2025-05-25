@@ -14,6 +14,8 @@ import {getWeatherData, getForecast} from '@/lib/api/weather';
 import { Badge } from "@/components/ui/badge";
 import { WeatherChart } from '@/components/explore/weather-chart';
 import { getAllTransportationOptions } from '@/lib/openroute';
+import { formatDistance, formatDuration } from '@/lib/openroute';
+import { TransportMode } from '@/types/transportation';
 
 import {
   Dialog,
@@ -63,7 +65,7 @@ interface ItineraryItem {
     }>;
   };
   transportationData: {
-    [key: string]: {
+    [key in TransportMode]: {
       distance: number;
       duration: number;
     };
@@ -459,7 +461,7 @@ export default function ItineraryPage() {
                   {item.categories?.map((category, index) => (
                     <span 
                       key={index}
-                      className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium"
+                      className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-medium"
                     >
                       {category}
                     </span>
@@ -470,7 +472,7 @@ export default function ItineraryPage() {
                   {item.rating && item.rating > 0 && (
                     <div className="flex items-center gap-2">
                       <div className="bg-primary/10 p-2 rounded-full">
-                        <Star className="h-4 w-4 text-yellow-400" />
+                        <Star className="h-4 w-4 text-yellow-500" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">Rating</p>
@@ -484,7 +486,7 @@ export default function ItineraryPage() {
                   {item.duration && (
                     <div className="flex items-center gap-2">
                       <div className="bg-primary/10 p-2 rounded-full">
-                        <Clock className="h-4 w-4 text-primary" />
+                        <Clock className="h-4 w-4 text-blue-500" />
                             </div>
                       <div>
                         <p className="text-sm font-medium">Duration</p>
@@ -496,7 +498,7 @@ export default function ItineraryPage() {
                   {item.bestTimeToVisit && (
                     <div className="flex items-center gap-2">
                       <div className="bg-primary/10 p-2 rounded-full">
-                        <Calendar className="h-4 w-4 text-primary" />
+                        <Calendar className="h-4 w-4 text-indigo-500" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">Best Time</p>
@@ -508,7 +510,7 @@ export default function ItineraryPage() {
                   {item.crowdLevel && (
                     <div className="flex items-center gap-2">
                       <div className="bg-primary/10 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-primary" />
+                        <Users className="h-4 w-4 text-purple-500" />
                               </div>
                       <div>
                         <p className="text-sm font-medium">Crowd Level</p>
@@ -519,15 +521,18 @@ export default function ItineraryPage() {
                   {item.transportationData && Object.entries(item.transportationData).map(([mode, data]) => (
                     <div key={mode} className="flex items-center gap-2">
                       <div className="bg-primary/10 p-2 rounded-full">
-                        {mode === 'car' && <Car className="h-4 w-4 text-primary" />}
-                        {mode === 'bus' && <Bus className="h-4 w-4 text-primary" />}
-                        {mode === 'walking' && <Footprints className="h-4 w-4 text-primary" />}
-                        {mode === 'cycling' && <Bike className="h-4 w-4 text-primary" />}
+                        {mode === 'driving-car' && <Car className="h-4 w-4 text-green-500" />}
+                        {mode === 'foot-walking' && <Footprints className="h-4 w-4 text-pink-500" />}
+                        {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-teal-500" />}
                       </div>
                       <div>
-                        <p className="text-sm font-medium capitalize">{mode}</p>
+                        <p className="text-sm font-medium capitalize">
+                          {mode === 'driving-car' ? 'Car' : 
+                           mode === 'foot-walking' ? 'Walking' : 
+                           mode === 'cycling-regular' ? 'Cycling' : mode}
+                        </p>
                         <p className="text-sm text-muted-foreground">
-                          {data.distance}km • {data.duration}min
+                          {formatDistance(data.distance)} • {formatDuration(data.duration)}
                         </p>
                       </div>
                     </div>

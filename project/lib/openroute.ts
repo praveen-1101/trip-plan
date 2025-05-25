@@ -11,13 +11,16 @@ interface Coordinates {
 }
 
 interface RouteResponse {
-  features: Array<{
-    properties: {
-      segments: Array<{
-        distance: number;
-        duration: number;
-      }>;
+  routes: Array<{
+    summary: {
+      distance: number;
+      duration: number;
     };
+    segments: Array<{
+      distance: number;
+      duration: number;
+      steps: Array<any>;
+    }>;
   }>;
 }
 
@@ -31,27 +34,46 @@ export async function getRoute(
   end: Coordinates,
   mode: TransportMode = "driving-car"
 ): Promise<{ distance: number; duration: number } | null> {
+  console.log(`[ORS] Fetching route for mode: ${mode} from ${start.lng},${start.lat} to ${end.lng},${end.lat}`);
+
+  if (!ORS_API_KEY) {
+    console.error("ORS_API_KEY is not defined.");
+    return null;
+  }
+
   try {
-    const response = await fetch(
-      `${ORS_BASE_URL}/directions/${mode}?api_key=${ORS_API_KEY}&start=${start.lng},${start.lat}&end=${end.lng},${end.lat}`,
+    const response = await fetch(`${ORS_BASE_URL}/directions/${mode}`,
       {
         headers: {
-          "Content-Type": "application/json",
+          Authorization: ORS_API_KEY,
+          "Content-Type": "application/geo+json",
           Accept: "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
         },
+        method: "POST",
+        body: JSON.stringify({
+          coordinates: [
+            [start.lng, start.lat],
+            [end.lng, end.lat],
+          ]
+        }),
       }
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch route");
+      const errorBody = await response.text();
+      console.error(`[ORS ERROR] Mode: ${mode}, Status: ${response.status}, Details: ${errorBody.substring(0, 500)}`);
+      throw new Error(`Failed to fetch route: ${response.status} ${errorBody}`);
     }
 
     const data: RouteResponse = await response.json();
-    const segment = data.features[0]?.properties.segments[0];
+    const segment = data.routes?.[0]?.segments?.[0];
 
     if (!segment) {
+      console.error(`[ORS ERROR] No route found for mode: ${mode}`);
       throw new Error("No route found");
     }
+
+    console.log(`[ORS] Route found for mode: ${mode}, Distance: ${segment.distance}, Duration: ${segment.duration}`);
 
     return {
       distance: segment.distance,
@@ -73,7 +95,7 @@ export async function getAllTransportationOptions(
     "cycling-regular": null,
     "foot-walking": null,
   };
-
+  
   await Promise.all(
     modes.map(async (mode) => {
       try {

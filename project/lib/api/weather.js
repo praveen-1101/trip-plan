@@ -14,6 +14,7 @@ export async function getWeatherData(lat, lon) {
     }
     
     const data = await response.json();
+    console.log("weather data",data.weather);
     return {
       main: {
         temp: Math.round(data.main.temp),

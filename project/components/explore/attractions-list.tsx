@@ -182,7 +182,7 @@ export function AttractionsList({ attractions, userCoordinates }: AttractionsLis
                     priceLevel={attraction.priceLevel}
                     categories={attraction.categories}
                     goodFor={attraction.goodFor}
-                    temperature={attraction.weather?.main.temp || 0}
+                    temperature={attraction.weather?.main?.temp || 0}
                     crowdLevel={attraction.crowdLevel.toString()}
                     bestRoutes={attraction.bestRoutes}
                     coordinates={attraction.coordinates}

@@ -10,7 +10,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { getWeatherData, getForecast } from '@/lib/api/weather';
-
+import { formatDistance, formatDuration } from '@/lib/openroute';
+import { TransportMode } from '@/types/transportation';
 import {
   Dialog,
   DialogContent,
@@ -51,8 +52,8 @@ interface Favorite {
     lat: number;
     lng: number;
   };
-  transportationModes: {
-    [key: string]: {
+  transportationData: {
+    [key in TransportMode]: {
       distance: number;
       duration: number;
     };
@@ -139,7 +140,7 @@ export default function FavoritesPage() {
               lat: favorite.coordinates.lat || 0,
               lng: favorite.coordinates.lng || 0
             },
-            transportationModes: favorite.transportationModes || {}
+            transportationData: favorite.transportationData || {}
           };
           // Log the processed data
           console.log('Processed favorite:', {
@@ -147,7 +148,7 @@ export default function FavoritesPage() {
             name: validItem.placeName,
             location: validItem.placeLocation,
             coordinates: validItem.coordinates,
-            transportationModes: validItem.transportationModes
+            transportationData: validItem.transportationData
           });
           
           return validItem;
@@ -449,7 +450,7 @@ export default function FavoritesPage() {
                     {favorite.categories?.map((category, index) => (
                       <span 
                         key={index}
-                        className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium"
+                        className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-medium"
                       >
                         {category}
                       </span>
@@ -460,7 +461,7 @@ export default function FavoritesPage() {
                     {favorite.rating > 0 && (
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 p-2 rounded-full">
-                          <Star className="h-4 w-4 text-primary" />
+                          <Star className="h-4 w-4 text-yellow-500" />
                         </div>
                         <div>
                           <p className="text-sm font-medium">Rating</p>
@@ -472,7 +473,7 @@ export default function FavoritesPage() {
                     {favorite.duration && (
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 p-2 rounded-full">
-                          <Clock className="h-4 w-4 text-primary" />
+                          <Clock className="h-4 w-4 text-blue-500" />
                         </div>
                         <div>
                           <p className="text-sm font-medium">Duration</p>
@@ -484,7 +485,7 @@ export default function FavoritesPage() {
                     {favorite.temperature && (
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 p-2 rounded-full">
-                          <Thermometer className="h-4 w-4 text-primary" />
+                          <Thermometer className="h-4 w-4 text-orange-500" />
                     </div>
                         <div>
                           <p className="text-sm font-medium">Temperature</p>
@@ -496,7 +497,7 @@ export default function FavoritesPage() {
                     {favorite.crowdLevel && (
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 p-2 rounded-full">
-                          <Users className="h-4 w-4 text-primary" />
+                          <Users className="h-4 w-4 text-purple-500" />
                         </div>
                         <div>
                           <p className="text-sm font-medium">Crowd Level</p>
@@ -507,17 +508,21 @@ export default function FavoritesPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    {favorite.transportationModes && Object.entries(favorite.transportationModes).map(([mode, data]) => (
+                    {favorite.transportationData && Object.entries(favorite.transportationData).map(([mode, data]) => (
                       <div key={mode} className="flex items-center gap-2">
                         <div className="bg-primary/10 p-2 rounded-full">
-                          {mode === 'driving-car' && <Car className="h-4 w-4 text-primary" />}
-                          {mode === 'footwalking' && <Footprints className="h-4 w-4 text-primary" />}
-                          {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-primary" />}
+                          {mode === 'driving-car' && <Car className="h-4 w-4 text-green-500" />}
+                          {mode === 'foot-walking' && <Footprints className="h-4 w-4 text-pink-500" />}
+                          {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-teal-500" />}
                         </div>
                         <div>
-                        <p className="text-sm font-medium capitalize">{mode.replace('-', ' ').replace('driving ', 'car ').replace('foot ', 'walking ').replace('cycling ', 'bike ')}</p> {/* Clean up mode names for display */}
+                          <p className="text-sm font-medium capitalize">
+                            {mode === 'driving-car' ? 'Car' : 
+                             mode === 'foot-walking' ? 'Walking' : 
+                             mode === 'cycling-regular' ? 'Cycling' : mode}
+                          </p>
                           <p className="text-sm text-muted-foreground">
-                            {data.distance}km • {data.duration}min
+                            {formatDistance(data.distance)} • {formatDuration(data.duration)}
                           </p>
                         </div>
                       </div>
@@ -759,11 +764,11 @@ export default function FavoritesPage() {
                     </div>
                   )}
 
-                  {selectedFavorite.transportationModes && Object.entries(selectedFavorite.transportationModes).length > 0 && (
+                  {selectedFavorite.transportationData && Object.entries(selectedFavorite.transportationData).length > 0 && (
                     <div>
                       <h3 className="text-md font-semibold mb-3">Transportation Options</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {Object.entries(selectedFavorite.transportationModes).map(([mode, data]) => {
+                        {Object.entries(selectedFavorite.transportationData).map(([mode, data]) => {
                         return (
                         <div key={mode} className="bg-background/50 p-3 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
