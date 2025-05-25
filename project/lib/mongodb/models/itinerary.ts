@@ -12,9 +12,9 @@ interface ItineraryItem {
     lng: number;
   };
   transportationModes: {
-    "driving-car": { distance: number; duration: number } | null;
-    "cycling-regular": { distance: number; duration: number } | null;
-    "foot-walking": { distance: number; duration: number } | null;
+    "driving-car": { distance: number; duration: number };
+    "cycling-regular": { distance: number; duration: number };
+    "foot-walking": { distance: number; duration: number };
   };
   date: Date;
   createdAt: Date;
@@ -44,22 +44,19 @@ const itinerarySchema = new mongoose.Schema<ItineraryItem>({
       type: {
         distance: { type: Number },
         duration: { type: Number },
-      },
-      default: null,
+      }
     },
     "cycling-regular": {
       type: {
         distance: { type: Number },
         duration: { type: Number },
-      },
-      default: null,
+      }
     },
     "foot-walking": {
       type: {
         distance: { type: Number },
         duration: { type: Number },
-      },
-      default: null,
+      }
     },
   },
   date: { type: Date, required: true },

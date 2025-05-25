@@ -4,7 +4,7 @@ import connectDB from '@/lib/mongodb/connect';
 import Favorite from '@/lib/mongodb/models/favorite';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { NextRequest } from 'next/server';
-import { TransportationMode } from '@/types/transportation';
+import { TransportMode } from '@/types/transportation';
 
 // Define interface for the favorite document
 interface FavoriteDocument {
@@ -31,7 +31,12 @@ interface FavoriteDocument {
     lat: number;
     lng: number;
   };
-  transportationModes?: TransportationMode[];
+  transportationModes?: {
+    [key in TransportMode]?: {
+      distance?: number;
+      duration?: number;
+    };
+  };
 }
 
 const rateLimit = new Map<string, number[]>();
@@ -117,7 +122,7 @@ export async function GET() {
         temperature: favorite.temperature || 'Moderate',
         crowdLevel: favorite.crowdLevel || 'Moderate',
         bestRoutes: favorite.bestRoutes || [],
-        transportationModes: favorite.transportationModes || undefined
+        transportationData: favorite.transportationModes || {}
       };
       
       console.log('Sanitized favorite data:', _id, result.placeName, result.placeLocation);
@@ -164,7 +169,7 @@ export async function POST(request: NextRequest) {
       crowdLevel, 
       bestRoutes,
       coordinates,
-      transportationModes
+      transportOptions
     } = body;
     
     // Ensure coordinates are properly handled
@@ -175,6 +180,18 @@ export async function POST(request: NextRequest) {
       lat: 0,
       lng: 0
     };
+
+    const transportationModesForDB: FavoriteDocument['transportationModes'] = {};
+    if (Array.isArray(transportOptions)) {
+      transportOptions.forEach((option: any) => { // Use 'any' or define a 'TransportationOption' interface for the frontend payload
+        if (option.mode && typeof option.distance === 'number' && typeof option.duration === 'number') {
+          transportationModesForDB[option.mode as TransportMode] = { // Type assertion to ensure correct key type
+            distance: option.distance,
+            duration: option.duration
+          };
+        }
+      });
+    }
     
     // Log the exact data received
     console.log('API received favorite data:', {
@@ -194,7 +211,7 @@ export async function POST(request: NextRequest) {
       goodFor: goodFor?.length,
       bestRoutes: bestRoutes?.length,
       coordinates: sanitizedCoordinates,
-      transportationModes: transportationModes?Object.keys(transportationModes).length : 'N/A'
+      transportationModes: transportationModesForDB
     });
     
     if (!placeId) {
@@ -240,7 +257,7 @@ export async function POST(request: NextRequest) {
       weatherForecast,
       crowdLevel,
       bestRoutes,
-      transportationModes
+      transportationModes: transportationModesForDB
     };
     
     // Save the favorite

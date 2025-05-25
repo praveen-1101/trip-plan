@@ -72,22 +72,19 @@ const favoriteSchema = new mongoose.Schema({
       type: {
         distance: { type: Number },
         duration: { type: Number },
-      },
-      default: null,
+      }
     },
     "cycling-regular": {
       type: {
         distance: { type: Number },
         duration: { type: Number },
-      },
-      default: null,
+      }
     },
     "foot-walking": {
       type: {
         distance: { type: Number },
         duration: { type: Number },
-      },
-      default: null,
+      }
     },
   },  
   crowdLevel: {

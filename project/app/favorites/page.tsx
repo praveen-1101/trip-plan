@@ -507,7 +507,7 @@ export default function FavoritesPage() {
                       )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                 {/*  <div className="grid grid-cols-2 gap-3">
                     {favorite.transportationData && Object.entries(favorite.transportationData).map(([mode, data]) => (
                       <div key={mode} className="flex items-center gap-2">
                         <div className="bg-primary/10 p-2 rounded-full">
@@ -527,7 +527,7 @@ export default function FavoritesPage() {
                         </div>
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                 </CardContent>
                 
                 <CardFooter className="p-4 pt-0 flex justify-between items-center">
@@ -764,26 +764,33 @@ export default function FavoritesPage() {
                     </div>
                   )}
 
+                  {/* Transportation Options */}
                   {selectedFavorite.transportationData && Object.entries(selectedFavorite.transportationData).length > 0 && (
                     <div>
                       <h3 className="text-md font-semibold mb-3">Transportation Options</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {Object.entries(selectedFavorite.transportationData).map(([mode, data]) => {
-                        return (
-                        <div key={mode} className="bg-background/50 p-3 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          {mode === 'driving-car' && <Car className="h-4 w-4 text-primary" />}
-                          {mode === 'foot-walking' && <Footprints className="h-4 w-4 text-primary" />}
-                          {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-primary" />}
-                          <span className="font-medium capitalize">{mode.replace('-', ' ').replace('driving ', 'car ').replace('foot ', 'walking ').replace('cycling ', 'bike ')}</span>
-                        </div>
-                          <p className="text-sm text-muted-foreground">{data.distance.toFixed(1)}km • {Math.round(data.duration / 60)}min</p>
-                        </div>
-                        );
-                       })}
+                          if (data && typeof data.distance === 'number' && typeof data.duration === 'number') {
+                            return (
+                              <div key={mode} className="bg-background/50 p-3 rounded-lg">
+                                <div className="flex items-center gap-2 mb-2">
+                                  {mode === 'driving-car' && <Car className="h-4 w-4 text-primary" />}
+                                  {mode === 'foot-walking' && <Footprints className="h-4 w-4 text-primary" />}
+                                  {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-primary" />}
+                                  <span className="font-medium capitalize">
+                                    {mode.replace('-', ' ').replace('driving ', '').replace('foot ', '').replace('regular', '')}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {formatDistance(data.distance)} • {formatDuration(data.duration)}
+                                </p>
+                              </div>
+                            );
+                          }
+                        })}
                       </div>
                     </div>
-                   )}
+                  )}
                   
                   <div className="pt-4 flex justify-end">
                     <Button 
@@ -930,6 +937,32 @@ export default function FavoritesPage() {
                                   <p className="text-sm text-muted-foreground">{details.join(':')}</p>
                                 </div>
                               );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {showFullDetails && selectedFavorite.transportationData && Object.entries(selectedFavorite.transportationData).length > 0 && (
+                        <div>
+                          <h3 className="text-md font-semibold mb-3">Transportation Options</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {Object.entries(selectedFavorite.transportationData).map(([mode, data]) => {
+                              const currentMode = mode as TransportMode;
+                              if (data && typeof data.distance === 'number' && typeof data.duration === 'number') {
+                              return (
+                                <div key={currentMode} className="bg-background/50 p-3 rounded-lg">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    {currentMode === 'driving-car' && <Car className="h-4 w-4 text-primary" />}
+                                    {currentMode === 'foot-walking' && <Footprints className="h-4 w-4 text-primary" />}
+                                    {currentMode === 'cycling-regular' && <Bike className="h-4 w-4 text-primary" />}
+                                    <span className="font-medium capitalize">
+                                      {currentMode.replace('-', ' ').replace('driving ', '').replace('foot ', '').replace('regular', '')}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">{formatDistance(data.distance)} • {formatDuration(data.duration)}</p>
+                                </div>
+                                );
+                              }
                             })}
                           </div>
                         </div>

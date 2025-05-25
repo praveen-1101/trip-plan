@@ -39,7 +39,7 @@ export async function geocodeLocation(query) {
   }
 }
 
-/* async function calculateDistance(fromLat, fromLon, toLat, toLon) {
+async function calculateDistance(fromLat, fromLon, toLat, toLon) {
   try {
     const response = await fetch(
       `https://api.openrouteservice.org/v2/directions/driving-car?start=${fromLon},${fromLat}&end=${toLon},${toLat}`,
@@ -72,7 +72,7 @@ export async function geocodeLocation(query) {
     const distance = R * c;
     return `${distance.toFixed(1)} km`;
   }
-} */
+} 
 
 export async function getAttractions(lat, lng, radius = 5000) {
   try {
@@ -94,8 +94,10 @@ export async function getAttractions(lat, lng, radius = 5000) {
 
         
         const drivingRoute = allRoutesRecord['driving-car'];
-        const distance = drivingRoute ? formatDistance(drivingRoute.distance) : null;
-        
+        let distance = drivingRoute ? formatDistance(drivingRoute.distance) : null;
+
+        distance = distance ? distance : await calculateDistance(lat, lng, place.coordinates.lat,place.coordinates.lng);
+
         const transportationOptions = Object.entries(allRoutesRecord)
             .filter(([, routeInfo]) => routeInfo && routeInfo.distance && routeInfo.duration)
             .map(([mode, routeInfo]) => ({

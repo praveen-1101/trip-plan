@@ -35,11 +35,8 @@ interface PlaceActionsProps {
   temperature?: number;
   crowdLevel?: string;
   bestRoutes?: string[];
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-  transportOptions: TransportationOption[];
+  coordinates?: { lat: number; lng: number };
+  transportOptions?: TransportationOption[];
 }
 
 export function PlaceActions({ 
@@ -143,7 +140,6 @@ export function PlaceActions({
     });
 
     try {
-      // Ensure all place data is passed to the API
       const response = await fetch('/api/favorites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -153,17 +149,16 @@ export function PlaceActions({
           placeDescription: sanitizedDescription,
           placeLocation: sanitizedLocation,
           placeImage: sanitizedImage,
+          coordinates: sanitizedCoordinates,
           rating: sanitizedRating,
-          bestTimeToVisit: sanitizedBestTimeToVisit,  
+          categories: sanitizedCategories,
+          bestTimeToVisit: sanitizedBestTimeToVisit,
           duration: sanitizedDuration,
           distance: sanitizedDistance,
           priceLevel: sanitizedPriceLevel,
-          categories: sanitizedCategories,
-          goodFor: sanitizedGoodFor,
           temperature: sanitizedTemperature,
           crowdLevel: sanitizedCrowdLevel,
           bestRoutes: sanitizedBestRoutes,
-          coordinates: sanitizedCoordinates,
           transportOptions: sanitizedTransportOptions
         }),
       });
@@ -205,7 +200,7 @@ export function PlaceActions({
 
   const handleAddToItinerary = async () => {
     if (!session) {
-      toast.error('Please sign in to add to itinerary');
+      toast.error('Please sign in to add places to itinerary');
       return;
     }
 
@@ -290,17 +285,7 @@ export function PlaceActions({
           crowdLevel: sanitizedCrowdLevel,
           bestRoutes: sanitizedBestRoutes,
           coordinates: sanitizedCoordinates,
-          transportData: sanitizedTransportOptions.reduce<Record<TransportMode, { distance: number; duration: number }>>((acc, option) => {
-            acc[option.mode] = {
-              distance: option.distance,
-              duration: option.duration
-            };
-            return acc;
-          }, {
-            'driving-car': { distance: 0, duration: 0 },
-            'foot-walking': { distance: 0, duration: 0 },
-            'cycling-regular': { distance: 0, duration: 0 }
-          })
+          transportOptions: sanitizedTransportOptions
         }),
       });
 
@@ -376,7 +361,7 @@ export function PlaceActions({
             <DialogTitle>Add to Itinerary</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-3">Select a future date to visit "{placeName}"</p>
+            <p className="text-sm text-muted-foreground mb-3">`Select a future date to visit {placeName}`</p>
             <div className="rounded-md border overflow-hidden">
               <Calendar
                 onChange={(value) => {

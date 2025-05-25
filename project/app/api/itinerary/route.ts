@@ -4,7 +4,35 @@ import connectDB from '@/lib/mongodb/connect';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { NextRequest } from 'next/server';
 import Itinerary from '@/lib/mongodb/models/itinerary';
+import { TransportMode } from '@/types/transportation';
 
+interface ItineraryDocument {
+  userId: string;
+  placeId: string;
+  placeName: string;
+  placeDescription: string;
+  placeLocation: string;
+  placeImage: string;
+  date: Date;
+  rating: number;
+  categories: string[];
+  bestTimeToVisit: string;
+  duration: string;
+  goodFor: string[];
+  distance: string;
+  priceLevel: number;
+  temperature: string;
+  weatherForecast: string;
+  crowdLevel: string;
+  bestRoutes: string[];
+  coordinates: { lat: number; lng: number };
+  transportationModes?: {
+    [key in TransportMode]?: {
+      distance?: number;
+      duration?: number;
+    };
+  };
+}
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,7 +58,8 @@ export async function POST(request: NextRequest) {
       weatherForecast, 
       crowdLevel, 
       bestRoutes,
-      coordinates
+      coordinates,
+      transportOptions
     } = await request.json();
     
     // Log the exact data received
@@ -52,7 +81,24 @@ export async function POST(request: NextRequest) {
       weatherForecast,
       crowdLevel,
       bestRoutes,
-      coordinates
+      coordinates,
+      transportOptions
+    });
+
+    const transportationModesForDB: ItineraryDocument['transportationModes'] = {};
+    if (Array.isArray(transportOptions)) {
+      transportOptions.forEach((option: any) => { // Use 'any' or define a 'TransportationOption' interface for the frontend payload
+        if (option.mode && typeof option.distance === 'number' && typeof option.duration === 'number') {
+          transportationModesForDB[option.mode as TransportMode] = { // Type assertion to ensure correct key type
+            distance: option.distance,
+            duration: option.duration
+          };
+        }
+      });
+    }
+
+    console.log('API received itinerary data: ', {
+      transportationModes: transportationModesForDB
     });
     
     if (!placeId || !date) {
@@ -96,7 +142,7 @@ export async function POST(request: NextRequest) {
         $gte: startOfDay,
         $lt: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000)
       }
-    });
+    }).lean() as { userId: string } | null;
 
     if (existing) {
       return NextResponse.json(
@@ -130,6 +176,7 @@ export async function POST(request: NextRequest) {
       lat: 0,
       lng: 0
     };
+    const sanitizedTransportationModes = transportationModesForDB;
 
     // Ensure all fields are properly populated
     const itineraryItem = await Itinerary.create({
@@ -151,7 +198,8 @@ export async function POST(request: NextRequest) {
       temperature: sanitizedTemperature,
       weatherForecast: sanitizedWeatherForecast,
       crowdLevel: sanitizedCrowdLevel,
-      bestRoutes: sanitizedBestRoutes
+      bestRoutes: sanitizedBestRoutes,
+      transportationModes: sanitizedTransportationModes
     });
 
     console.log('Created itinerary item with data:', {
@@ -170,7 +218,8 @@ export async function POST(request: NextRequest) {
       weatherForecast: sanitizedWeatherForecast,
       crowdLevel: sanitizedCrowdLevel,
       bestRoutes: sanitizedBestRoutes,
-      coordinates: sanitizedCoordinates
+      coordinates: sanitizedCoordinates,
+      transportationModes: sanitizedTransportationModes
     });
 
     return NextResponse.json({ 
@@ -227,7 +276,8 @@ export async function GET() {
         temperature: item.temperature || 'Moderate',
         weatherForecast: item.weatherForecast || 'Varies',
         crowdLevel: item.crowdLevel || 'Moderate',
-        bestRoutes: item.bestRoutes || []
+        bestRoutes: item.bestRoutes || [],
+        transportationData: item.transportationModes || {}
       };
       
       console.log('Sanitized itinerary data:', result.placeName, new Date(result.date).toLocaleDateString());
