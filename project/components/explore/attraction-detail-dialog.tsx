@@ -51,14 +51,14 @@ interface AttractionDetailDialogProps {
   attraction: Attraction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userLocation: Coordinates | null;
+  userCoordinates: Coordinates | null;
 }
 
 export function AttractionDetailDialog({
   attraction,
   open,
   onOpenChange,
-  userLocation
+  userCoordinates
 }: AttractionDetailDialogProps) {
 
    const [transportData, setTransportData] = useState<Record<TransportMode, RouteInfo | null> | null>(null);
@@ -82,7 +82,7 @@ export function AttractionDetailDialog({
 
    useEffect(() => {
     async function fetchRoutes() {
-      if(!open || !userLocation) {
+      if(!open || !userCoordinates) {
         setTransportData(null);
        /*  setRecommendedMode(null); */
         setLoading(false);  
@@ -90,7 +90,7 @@ export function AttractionDetailDialog({
         return;
       }
 
-      const storageKey = `transportData_${attraction.id}_${userLocation.lat}_${userLocation.lng}`; // Unique key including user location
+      const storageKey = `transportData_${attraction.id}_${userCoordinates.lat}_${userCoordinates.lng}`; // Unique key including user location
       let dataLoadedFromStorage = false;
 
       if (typeof window !== 'undefined' && localStorage.getItem(storageKey)) {
@@ -112,7 +112,7 @@ export function AttractionDetailDialog({
 
       try {
         // Call the new getAllTransportationOptions function
-        const fetchedData = await getAllTransportationOptions(userLocation, attraction.coordinates);
+        const fetchedData = await getAllTransportationOptions(userCoordinates, attraction.coordinates);
         setTransportData(fetchedData); // Store the entire record
         if (typeof window !== 'undefined') {
           localStorage.setItem(storageKey, JSON.stringify(fetchedData)); // Store the fetched data
@@ -130,7 +130,7 @@ export function AttractionDetailDialog({
     }
     }
     fetchRoutes();
-  }, [open, userLocation,attraction.coordinates, attraction.id]);
+  }, [open, userCoordinates,attraction.coordinates, attraction.id]);
   // Transform attraction.transportOptions (array) into a Record<TransportMode, RouteInfo | null>
   // for compatibility with getRecommendedMode. Use useMemo to re-calculate only if attraction.transportOptions changes.
 

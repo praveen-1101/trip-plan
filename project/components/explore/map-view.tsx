@@ -1,4 +1,4 @@
-/* 'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Attraction } from '@/types/attractions';
@@ -7,15 +7,20 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Info } from 'lucide-react';
 import { AttractionDetailDialog } from '@/components/explore/attraction-detail-dialog';
 
-interface MapViewProps {
-  attractions: Attraction[];
+interface Coordinates {
+  lat: number;
+  lng: number;
 }
 
-export function MapView({ attractions }: MapViewProps) {
+interface MapViewProps {
+  attractions: Attraction[];
+  userCoordinates: Coordinates | null;
+}
+
+export function MapView({ attractions, userCoordinates }: MapViewProps) {
   const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
   const [openDetailId, setOpenDetailId] = useState<string | null>(null);
 
-  
   const handleSelectAttraction = (attraction: Attraction) => {
     setSelectedAttraction(attraction);
   };
@@ -111,8 +116,9 @@ export function MapView({ attractions }: MapViewProps) {
           onOpenChange={(open) => {
             if (!open) setOpenDetailId(null);
           }}
+          userCoordinates={userCoordinates}
         />
       )}
     </div>
   );
-} */
+}

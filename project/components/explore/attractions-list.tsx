@@ -191,7 +191,7 @@ export function AttractionsList({ attractions, userCoordinates }: AttractionsLis
           onOpenChange={(open) => {
             if (!open) setOpenDetailId(null);
           }}
-          userLocation = {userCoordinates}
+          userCoordinates={userCoordinates}
         />
       )}
     </div>

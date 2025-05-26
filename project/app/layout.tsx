@@ -4,6 +4,7 @@ import './globals.css';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Providers } from '@/components/providers';
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 

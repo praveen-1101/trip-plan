@@ -1,6 +1,5 @@
 
-
-const API_KEY = 'fb09a3dc847ff4a9e4ba2b5a5bece713';
+const API_KEY = process.env.NEXT_PUBLIC_WEATHERAPI_KEY;
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 export async function getWeatherData(lat, lon) {

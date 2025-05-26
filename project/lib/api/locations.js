@@ -1,4 +1,3 @@
-
 import { getTouristPlaces } from './places';
 import { getWeatherData, getForecast } from './weather';
 import { getRoute, formatDistance, formatDuration, RouteInfo, getAllTransportationOptions, getRecommendedMode, getTransportModeName } from '@/lib/openroute';
@@ -39,7 +38,7 @@ export async function geocodeLocation(query) {
 }
 
 async function calculateDistance(fromLat, fromLon, toLat, toLon) {
-  if (!NEXT_PUBLIC_OPENROUTE_API_KEY) {
+  if (!OPENROUTE_API_KEY) {
     console.warn('OPENROUTE_API_KEY is missing, returning fallback distance');
     const R = 6371; 
     const dLat = (toLat - fromLat) * Math.PI / 180;
@@ -84,7 +83,9 @@ async function calculateDistance(fromLat, fromLon, toLat, toLon) {
     const distance = R * c;
     return `${distance.toFixed(1)} km`;
   }
-} 
+}
+
+export { calculateDistance };
 
 export async function getAttractions(lat, lng, radius = 5000) {
   try {
@@ -101,7 +102,7 @@ export async function getAttractions(lat, lng, radius = 5000) {
         const [allRoutesRecord, placeWeather, placeForecast] = await Promise.all([
         getAllTransportationOptions(userCoordinates, place.coordinates),
         getWeatherData(place.coordinates.lat, place.coordinates.lng),
-        getForecast(place.coordinates.lat, place.coordinates.lng),
+        getForecast(place.coordinates.lat, place.coordinates.lng)
         ]);
 
         

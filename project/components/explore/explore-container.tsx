@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SearchFilters } from '@/components/explore/search-filters';
 import { AttractionsList } from '@/components/explore/attractions-list';
+import { MapView } from '@/components/explore/map-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapIcon, ListIcon, Loader2, CloudSun } from 'lucide-react';
 import { Attraction } from '@/types/attractions';
@@ -217,11 +218,19 @@ export function ExploreContainer() {
                       <ListIcon className="h-4 w-4" />
                       <span className="hidden sm:inline">List View</span>
                     </TabsTrigger>
+                    <TabsTrigger value="map" className="flex items-center gap-2">
+                      <MapIcon className="h-4 w-4" />
+                      <span className="hidden sm:inline">Map View</span>
+                    </TabsTrigger>
                   </TabsList>
                 </div>
                 
                 <TabsContent value="list" className="mt-0">
                   <AttractionsList attractions={attractions} userCoordinates={userCoordinates}/>
+                </TabsContent>
+                
+                <TabsContent value="map" className="mt-0">
+                  <MapView attractions={attractions} userCoordinates={userCoordinates}/>
                 </TabsContent>
                 
               </Tabs>
