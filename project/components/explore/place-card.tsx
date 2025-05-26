@@ -1,6 +1,9 @@
-const handleShare = async () => {
+import { Attraction } from "@/types/attractions";
+import { toast } from "sonner";
+
+const handleShare = async (place: Attraction) => {
   try {
-    const shareUrl = `${window.location.origin}/explore?place=${place.placeId}`;
+    const shareUrl = `${window.location.origin}/explore?place=${place.id}`;
     
     if (navigator.share) {
       await navigator.share({
