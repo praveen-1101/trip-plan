@@ -51,9 +51,11 @@ export async function POST(request: Request) {
       console.log('Database connected successfully');
     } catch (dbError) {
       console.error('Database connection error:', dbError);
-      throw new Error(`Database connection failed: ${dbError.message}`);
+      if (dbError instanceof Error) {
+        throw new Error(`Database connection failed: ${dbError.message}`);
+      }
+      throw new Error('Database connection failed: Unknown error');
     }
-
     // Check if user already exists
     console.log('Checking for existing user...');
     try {
@@ -67,7 +69,10 @@ export async function POST(request: Request) {
       }
     } catch (findError) {
       console.error('Error checking existing user:', findError);
-      throw new Error(`Error checking existing user: ${findError.message}`);
+      if (findError instanceof Error) {
+        throw new Error(`Error checking existing user: ${findError.message}`);
+      }
+      throw new Error('Error checking existing user: Unknown error');
     }
 
     // Hash password
@@ -78,7 +83,10 @@ export async function POST(request: Request) {
       console.log('Password hashed successfully');
     } catch (hashError) {
       console.error('Error hashing password:', hashError);
-      throw new Error(`Error hashing password: ${hashError.message}`);
+      if (hashError instanceof Error) {
+        throw new Error(`Error hashing password: ${hashError.message}`);
+      }
+      throw new Error('Error hashing password: Unknown error');
     }
 
     // Create new user
@@ -108,13 +116,14 @@ export async function POST(request: Request) {
       );
     } catch (createError) {
       console.error('Error creating user:', createError);
-      if (createError.code === 11000) {
+      if (createError && typeof createError === 'object' && 'code' in createError && (createError as any).code === 11000) {
         return NextResponse.json(
           { error: 'User already exists' },
           { status: 400 }
         );
       }
-      throw new Error(`Error creating user: ${createError.message}`);
+      const message = createError instanceof Error ? createError.message : 'Unknown error creating user';
+      throw new Error(`Error creating user: ${message}`);
     }
   } catch (error) {
     console.error('Signup error:', error);
