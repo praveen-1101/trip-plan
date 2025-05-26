@@ -39,6 +39,19 @@ export async function geocodeLocation(query) {
 }
 
 async function calculateDistance(fromLat, fromLon, toLat, toLon) {
+  if (!NEXT_PUBLIC_OPENROUTE_API_KEY) {
+    console.warn('OPENROUTE_API_KEY is missing, returning fallback distance');
+    const R = 6371; 
+    const dLat = (toLat - fromLat) * Math.PI / 180;
+    const dLon = (toLon - fromLon) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(fromLat * Math.PI / 180) * Math.cos(toLat * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    return `${distance.toFixed(1)} km`;
+  }
   try {
     const response = await fetch(
       `https://api.openrouteservice.org/v2/directions/driving-car?start=${fromLon},${fromLat}&end=${toLon},${toLat}`,

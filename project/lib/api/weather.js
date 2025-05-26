@@ -1,4 +1,4 @@
-'use client';
+
 
 const API_KEY = 'fb09a3dc847ff4a9e4ba2b5a5bece713';
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
