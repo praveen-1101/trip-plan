@@ -52,7 +52,7 @@ export async function GET(
     const favorite = await Favorite.findOne({
       _id: favoriteId,
       userId: session.user.id
-    }).lean() as FavoriteDocument;
+    }).lean() as unknown as FavoriteDocument;
 
     if (!favorite) {
       return NextResponse.json(
