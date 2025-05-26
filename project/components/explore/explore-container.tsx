@@ -4,14 +4,12 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SearchFilters } from '@/components/explore/search-filters';
 import { AttractionsList } from '@/components/explore/attractions-list';
-/* import { MapView } from '@/components/explore/map-view'; */
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapIcon, ListIcon, Loader2, CloudSun } from 'lucide-react';
 import { Attraction } from '@/types/attractions';
 import { geocodeLocation, getAttractions } from '@/lib/api/locations';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-
 // Storage keys for localStorage
 const STORAGE_KEY_LOCATION = 'explore-location';
 const STORAGE_KEY_ATTRACTIONS = 'explore-attractions';
@@ -226,9 +224,6 @@ export function ExploreContainer() {
                   <AttractionsList attractions={attractions} userCoordinates={userCoordinates}/>
                 </TabsContent>
                 
-                {/* <TabsContent value="map" className="mt-0">
-                  <MapView attractions={attractions} />
-                </TabsContent> */}
               </Tabs>
             ) : (
               <div className="flex items-center justify-center h-96 bg-card rounded-lg border border-border">
