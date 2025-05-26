@@ -6,13 +6,13 @@ export function FeaturesSection() {
     {
       icon: <MapIcon className="h-12 w-12 text-chart-1" />,
       title: "Nearby Attractions",
-      description: "Discover the best tourist spots around your location with ratings and reviews from real travelers."
+      description: "Discover the best tourist spots around search location with ratings from real travelers."
     },
-    {
+    /* {
       icon: <TrainFront className="h-12 w-12 text-chart-2" />,
       title: "Optimal Routes",
       description: "Find the best transportation options including trains, buses, and rideshare services to reach your destinations."
-    },
+    }, */
     {
       icon: <Clock className="h-12 w-12 text-chart-3" />,
       title: "Perfect Timing",
@@ -25,18 +25,13 @@ export function FeaturesSection() {
     },
     {
       icon: <Compass className="h-12 w-12 text-chart-1" />,
-      title: "Interactive Maps",
-      description: "Visualize your entire journey with interactive maps showing all attractions and routes."
+      title: "Transportation Options",
+      description: "Easily discover nearby attractions and the best transportation options—be it bus, bik, or walking—all in one place."
     },
     {
       icon: <Cloud className="h-12 w-12 text-chart-5" />,
       title: "Weather Insights",
       description: "Get detailed weather forecasts for your planned visits to help pack appropriately."
-    },
-    {
-      icon: <Users className="h-12 w-12 text-chart-2" />,
-      title: "Crowd Prediction",
-      description: "Avoid the crowds with insights on the busiest times at popular attractions."
     },
     {
       icon: <CalendarCheck className="h-12 w-12 text-chart-3" />,
@@ -57,7 +52,7 @@ export function FeaturesSection() {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <Card key={index} className="border border-border bg-card hover:shadow-lg transition-shadow duration-300">
               <CardHeader className="pb-2">

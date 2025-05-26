@@ -9,7 +9,7 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">About Us</h3>
             <p className="text-sm text-muted-foreground">
-              We help you discover and plan your perfect travel experience with AI-powered recommendations and real-time weather forecasts.
+              We help you discover and plan your perfect travel experience with best possible modes of transport and real-time weather forecasts.
             </p>
           </div>
           
@@ -49,7 +49,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/explore#routes" className="text-sm text-muted-foreground hover:text-primary">
-                  Best Routes
+                  Best Modes of Transport
                 </Link>
               </li>
               <li>
@@ -69,7 +69,7 @@ export function Footer() {
             <h3 className="text-lg font-semibold">Connect With Us</h3>
             <div className="flex space-x-4">
               <a
-                href="https://github.com"
+                href="https://github.com/praveen-1101"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary"
@@ -85,7 +85,7 @@ export function Footer() {
                 <Twitter className="h-5 w-5" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/in/praveen-kumar-031473270/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary"
@@ -93,8 +93,10 @@ export function Footer() {
                 <Linkedin className="h-5 w-5" />
               </a>
               <a
-                href="mailto:contact@example.com"
+                href="mailto:borapraveen1101@gmail.com"
                 className="text-muted-foreground hover:text-primary"
+                target="_blank"
+                rel="noopener noreferrer"  
               >
                 <Mail className="h-5 w-5" />
               </a>

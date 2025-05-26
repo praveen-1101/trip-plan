@@ -340,28 +340,6 @@ export default function FavoriteDetailPage({ params }: { params: { id: string } 
           </Card>
         </div>
       )}
-      
-      {/* Price level indicator */}
-      {favorite.priceLevel > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Price Level</h2>
-          <div className="flex items-center gap-2">
-            <div className="text-lg font-medium">
-              {Array.from({ length: favorite.priceLevel }).map((_, i) => (
-                <span key={i} className="text-primary">$</span>
-              ))}
-              {Array.from({ length: 4 - favorite.priceLevel }).map((_, i) => (
-                <span key={i} className="text-muted-foreground/30">$</span>
-              ))}
-            </div>
-            <span className="text-sm text-muted-foreground">
-              ({favorite.priceLevel === 1 ? 'Inexpensive' : 
-                favorite.priceLevel === 2 ? 'Moderate' : 
-                favorite.priceLevel === 3 ? 'Expensive' : 'Very Expensive'})
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 

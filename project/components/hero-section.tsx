@@ -38,7 +38,7 @@ export function HeroSection() {
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Find the best tourist spots, optimized routes, and perfect timing for your next adventure
+          Explore top tourist spots, smart travel options, and the perfect time to visit.
           </p>
           
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">

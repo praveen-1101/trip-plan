@@ -123,23 +123,6 @@ export function AttractionsList({ attractions, userCoordinates }: AttractionsLis
                     <Navigation className="h-4 w-4 text-muted-foreground" />
                     <span>Distance: {attraction.distance}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <span 
-                          key={i} 
-                          className={`w-4 h-4 text-xs flex items-center justify-center ${
-                            i < attraction.priceLevel 
-                              ? "text-primary" 
-                              : "text-muted-foreground/30"
-                          }`}
-                        >
-                          $
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-muted-foreground text-xs">Price Level</span>
-                  </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-3">

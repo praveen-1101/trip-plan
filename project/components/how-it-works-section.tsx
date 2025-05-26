@@ -19,7 +19,7 @@ export function HowItWorksSection() {
     {
       number: "03",
       title: "Plan Your Route",
-      description: "Select your preferred transportation methods and see optimized routes to visit multiple attractions.",
+      description: "Select your preferred transportation methods to plan your visits to multiple attractions.",
       image: "https://images.pexels.com/photos/3760958/pexels-photo-3760958.jpeg?auto=compress&cs=tinysrgb&h=650"
     },
     {
@@ -35,7 +35,7 @@ export function HowItWorksSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            How TravelSage Works
+            How Flow-2-Dest Works
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Planning your perfect trip is easy with our simple 4-step process
@@ -66,17 +66,17 @@ export function HowItWorksSection() {
         </div>
         
         <div className="mt-20 bg-card rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
-          <h3 className="text-2xl font-semibold mb-6 text-center">Why Choose TravelSage?</h3>
+          <h3 className="text-2xl font-semibold mb-6 text-center">Why Choose Flow-2-Dest?</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6">
             {[
               "Real-time data from trusted APIs",
-              "Personalized recommendations",
               "Time-saving route optimization",
-              "Weather and crowd insights",
+              "Weather temparature and Forecast",
               "Multi-modal transportation options",
               "Save and share your itineraries",
-              "User-friendly mobile experience",
+              "Favorites and Save for later",
+              "User-friendly mobile experience and desktop",
               "Offline access to saved trips"
             ].map((feature, index) => (
               <div key={index} className="flex items-start space-x-3">

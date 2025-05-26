@@ -112,7 +112,7 @@ export function SearchFilters({
               <span>Price Range</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent>
+          {/* <AccordionContent>
             <div className="pt-4 px-2">
               <div className="mb-6">
                 <Slider 
@@ -133,7 +133,7 @@ export function SearchFilters({
                 <span>$100+</span>
               </div>
             </div>
-          </AccordionContent>
+          </AccordionContent> */}
         </AccordionItem>
         
         <AccordionItem value="sort">
@@ -181,9 +181,8 @@ export function SearchFilters({
                 <SelectContent>
                   <SelectItem value="all">All Options</SelectItem>
                   <SelectItem value="walking">Walking</SelectItem>
-                  <SelectItem value="public">Public Transit</SelectItem>
                   <SelectItem value="driving">Driving</SelectItem>
-                  <SelectItem value="rideshare">Rideshare</SelectItem>
+                  <SelectItem value="rideshare">Ride</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -191,7 +190,7 @@ export function SearchFilters({
         </AccordionItem>
       </Accordion>
       
-      <Card>
+      {/* <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Clock className="h-4 w-4" />
@@ -207,7 +206,7 @@ export function SearchFilters({
             </p>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

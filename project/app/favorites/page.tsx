@@ -427,13 +427,13 @@ export default function FavoritesPage() {
             console.log('Rendering favorite card:', favorite.placeName);
             
             return (
-              <Card key={favorite._id} className="overflow-hidden card-hover">
+              <Card key={favorite._id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
                 <div className="relative h-48">
-                    <Image
+                  <Image
                     src={favorite.placeImage || '/placeholder.jpg'}
-                      alt={favorite.placeName}
-                      fill
-                      className="object-cover"
+                    alt={favorite.placeName}
+                    fill
+                    className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
@@ -445,12 +445,12 @@ export default function FavoritesPage() {
                   </div>
                 </div>
                 
-                <CardContent className="p-4">
+                <CardContent className="p-4 flex-grow">
                   <div className="flex flex-wrap gap-2 mb-3">
                     {favorite.categories?.map((category, index) => (
                       <span 
                         key={index}
-                        className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-medium"
+                        className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium"
                       >
                         {category}
                       </span>
@@ -478,7 +478,7 @@ export default function FavoritesPage() {
                         <div>
                           <p className="text-sm font-medium">Duration</p>
                           <p className="text-sm text-muted-foreground">{favorite.duration}</p>
-                          </div>
+                        </div>
                       </div>
                     )}
                     
@@ -507,38 +507,33 @@ export default function FavoritesPage() {
                       )}
                   </div>
 
-                 {/*  <div className="grid grid-cols-2 gap-3">
-                    {favorite.transportationData && Object.entries(favorite.transportationData).map(([mode, data]) => (
-                      <div key={mode} className="flex items-center gap-2">
-                        <div className="bg-primary/10 p-2 rounded-full">
-                          {mode === 'driving-car' && <Car className="h-4 w-4 text-green-500" />}
-                          {mode === 'foot-walking' && <Footprints className="h-4 w-4 text-pink-500" />}
-                          {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-teal-500" />}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium capitalize">
-                            {mode === 'driving-car' ? 'Car' : 
-                             mode === 'foot-walking' ? 'Walking' : 
-                             mode === 'cycling-regular' ? 'Cycling' : mode}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDistance(data.distance)} • {formatDuration(data.duration)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div> */}
+              
                 </CardContent>
                 
-                <CardFooter className="p-4 pt-0 flex justify-between items-center">
-                  <Button variant="ghost" size="sm" onClick={() => handleViewDetail(favorite)}>
-                    <Info className="h-4 w-4 mr-2" />
-                    View Details
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => removeFavorite(favorite._id)}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Remove
-                  </Button>
+                <CardFooter className="p-4 pt-0 mt-auto border-t">
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleViewDetail(favorite)}>
+                        <Info className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedFavorite(favorite);
+                          setShowFullDetails(true);
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View Full Details
+                      </Button>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => removeFavorite(favorite._id)}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             );
@@ -549,10 +544,10 @@ export default function FavoritesPage() {
       {/* Detail Dialog */}
       {selectedFavorite && (
         <Dialog open={openDetailDialog} onOpenChange={setOpenDetailDialog}>
-          <DialogContent className="max-w-5xl p-0 overflow-hidden max-h-[85vh]">
+          <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
-              {/* Left side - Image */}
-              <div className="relative h-64 lg:h-[400px]">
+              {/* Left side - Image and Basic Info */}
+              <div className="relative h-[40vh] lg:h-full">
                 <Image
                   src={selectedFavorite.placeImage || '/placeholder.jpg'}
                   alt={selectedFavorite.placeName}
@@ -564,7 +559,7 @@ export default function FavoritesPage() {
                     target.src = '/placeholder.jpg';
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                 <div className="absolute top-2 right-2">
                   <Button 
                     size="icon" 
@@ -578,232 +573,188 @@ export default function FavoritesPage() {
                     <Heart className="h-4 w-4 fill-current" />
                   </Button>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-                  <div>
-                    <h2 className="text-2xl font-bold">{selectedFavorite.placeName}</h2>
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4" />
-                      <span>{selectedFavorite.placeLocation}</span>
-                    </div>
-                    {selectedFavorite.rating > 0 && (
-                      <div className="mt-2 bg-white text-primary font-semibold rounded-md py-1 px-2 inline-flex items-center">
-                        <Star className="h-4 w-4 fill-primary mr-1" />
-                        <span>{selectedFavorite.rating}</span>
-                      </div>
-                    )}
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <h2 className="text-3xl font-bold mb-2">{selectedFavorite.placeName}</h2>
+                  <div className="flex items-center gap-2 text-lg">
+                    <MapPin className="h-5 w-5" />
+                    <span>{selectedFavorite.placeLocation}</span>
                   </div>
+                  {selectedFavorite.rating > 0 && (
+                    <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-lg p-2 inline-flex items-center">
+                      <Star className="h-5 w-5 text-yellow-400 fill-current mr-1" />
+                      <span className="font-semibold">{selectedFavorite.rating.toFixed(1)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
               
               {/* Right side - Details */}
-              <div className="p-6 overflow-y-auto max-h-[500px]">
-                <DialogHeader className="mb-4">
-                  <DialogTitle className="text-xl">Place Details</DialogTitle>
-                </DialogHeader>
-                
-                <div className="space-y-6 overflow-y-auto pr-2">
-                  <div>
-                    <h3 className="text-md font-semibold mb-2">Description</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedFavorite.placeDescription}
-                    </p>
-                  </div>
+              <div className="h-full flex flex-col">
+                <div className="p-6 overflow-y-auto flex-grow">
+                  <DialogHeader className="mb-4">
+                    <DialogTitle className="text-xl">Place Details</DialogTitle>
+                  </DialogHeader>
                   
-                  <div className="bg-accent/10 p-4 rounded-lg">
-                    <h3 className="text-md font-semibold mb-3">Key Information</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {selectedFavorite.bestTimeToVisit && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className="bg-background p-2 rounded-full">
-                            <Calendar className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Best Time to Visit</p>
-                            <p className="text-sm text-muted-foreground">{selectedFavorite.bestTimeToVisit}</p>
-                          </div>
-                        </div>
-                      )}
-                      {selectedFavorite.duration && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className="bg-background p-2 rounded-full">
-                            <Clock className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Duration</p>
-                            <p className="text-sm text-muted-foreground">{selectedFavorite.duration}</p>
-                          </div>
-                        </div>
-                      )}
-                      {selectedFavorite.distance && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className="bg-background p-2 rounded-full">
-                            <Navigation className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Distance</p>
-                            <p className="text-sm text-muted-foreground">{selectedFavorite.distance}</p>
-                          </div>
-                        </div>
-                      )}
-                      {selectedFavorite.priceLevel > 0 && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className="bg-background p-2 rounded-full">
-                            <span className="h-4 w-4 text-primary font-bold flex items-center justify-center">$</span>
-                          </div>
-                          <div>
-                            <p className="font-medium">Price Level</p>
-                            <p className="text-sm text-muted-foreground">
-                              {Array.from({ length: selectedFavorite.priceLevel }).map(() => '$').join('')}
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-md font-semibold mb-2">Description</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedFavorite.placeDescription}
+                      </p>
                     </div>
-                  </div>
-                  
-                  {/* Weather and crowd information */}
-                  {(selectedFavorite.temperature || selectedFavorite.weatherForecast || selectedFavorite.crowdLevel) && (
+                    
                     <div className="bg-accent/10 p-4 rounded-lg">
-                      <h3 className="text-md font-semibold mb-3">Conditions</h3>
-                      <div className="space-y-4">
-                        {selectedFavorite.coordinates && (
-                          <div className="w-full bg-background/50 p-4 rounded-lg">
-                            <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                              <CloudRain className="h-4 w-4 text-primary" />
-                              Weather Forecast
-                            </h4>
-                            <div className="h-[200px] w-full">
-                              <WeatherChart 
-                                lat={selectedFavorite.coordinates.lat} 
-                                lng={selectedFavorite.coordinates.lng}
-                              />
+                      <h3 className="text-md font-semibold mb-3">Key Information</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {selectedFavorite.bestTimeToVisit && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <div className="bg-background p-2 rounded-full">
+                              <Calendar className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Best Time to Visit</p>
+                              <p className="text-sm text-muted-foreground">{selectedFavorite.bestTimeToVisit}</p>
                             </div>
                           </div>
                         )}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {selectedFavorite.temperature && (
-                            <div className="flex items-center gap-2 text-sm bg-background/50 p-3 rounded-lg">
-                              <div className="bg-primary/10 p-2 rounded-full">
-                                <Thermometer className="h-4 w-4 text-primary" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Temperature</p>
-                                <p className="text-sm text-muted-foreground">{selectedFavorite.temperature}°C</p>
+                        {selectedFavorite.duration && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <div className="bg-background p-2 rounded-full">
+                              <Clock className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Duration</p>
+                              <p className="text-sm text-muted-foreground">{selectedFavorite.duration}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Weather and crowd information */}
+                    {(selectedFavorite.temperature || selectedFavorite.weatherForecast || selectedFavorite.crowdLevel) && (
+                      <div className="bg-accent/10 p-4 rounded-lg">
+                        <h3 className="text-md font-semibold mb-3">Conditions</h3>
+                        <div className="space-y-4">
+                          {/* {selectedFavorite.coordinates && (
+                            <div className="w-full bg-background/50 p-4 rounded-lg">
+                              <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <CloudRain className="h-4 w-4 text-primary" />
+                                Weather Forecast
+                              </h4>
+                              <div className="h-[200px] w-full">
+                                <WeatherChart 
+                                  lat={selectedFavorite.coordinates.lat} 
+                                  lng={selectedFavorite.coordinates.lng}
+                                />
                               </div>
                             </div>
-                          )}
-                          {selectedFavorite.crowdLevel && (
-                            <div className="flex items-center gap-2 text-sm bg-background/50 p-3 rounded-lg">
-                              <div className="bg-primary/10 p-2 rounded-full">
-                                <Users className="h-4 w-4 text-primary" />
+                          )} */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {selectedFavorite.temperature && (
+                              <div className="flex items-center gap-2 text-sm bg-background/50 p-3 rounded-lg">
+                                <div className="bg-primary/10 p-2 rounded-full">
+                                  <Thermometer className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">Temperature</p>
+                                  <p className="text-sm text-muted-foreground">{selectedFavorite.temperature}°C</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-medium">Crowd Level</p>
-                                <p className="text-sm text-muted-foreground">{selectedFavorite.crowdLevel}</p>
+                            )}
+                            {selectedFavorite.crowdLevel && (
+                              <div className="flex items-center gap-2 text-sm bg-background/50 p-3 rounded-lg">
+                                <div className="bg-primary/10 p-2 rounded-full">
+                                  <Users className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">Crowd Level</p>
+                                  <p className="text-sm text-muted-foreground">{selectedFavorite.crowdLevel}</p>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Best routes */}
-                  {selectedFavorite.bestRoutes && selectedFavorite.bestRoutes.length > 0 && (
-                    <div>
-                      <h3 className="text-md font-semibold mb-3">Transportation Options</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {selectedFavorite.bestRoutes.map((route, index) => {
-                          const [mode, ...details] = route.split(':');
-                          return (
-                            <div key={index} className="bg-background/50 p-3 rounded-lg">
-                              <div className="flex items-center gap-2 mb-2">
-                                {mode.toLowerCase().includes('car') && <Car className="h-4 w-4 text-primary" />}
-                                {mode.toLowerCase().includes('bus') && <Bus className="h-4 w-4 text-primary" />}
-                                {mode.toLowerCase().includes('train') && <Train className="h-4 w-4 text-primary" />}
-                                {mode.toLowerCase().includes('walk') && <Footprints className="h-4 w-4 text-primary" />}
-                                <span className="font-medium">{mode}</span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{details.join(':')}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedFavorite.categories && selectedFavorite.categories.length > 0 && (
-                    <div>
-                      <h3 className="text-md font-semibold mb-3">Categories</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedFavorite.categories.map((category, index) => (
-                          <div 
-                            key={index} 
-                            className="bg-accent/20 px-3 py-1 rounded-full text-sm"
-                          >
-                            {category}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedFavorite.goodFor && selectedFavorite.goodFor.length > 0 && (
-                    <div>
-                      <h3 className="text-md font-semibold mb-3">Good For</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedFavorite.goodFor.map((item, index) => (
-                          <div 
-                            key={index} 
-                            className="bg-accent/20 px-3 py-1 rounded-full text-sm"
-                          >
-                            {item}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Transportation Options */}
-                  {selectedFavorite.transportationData && Object.entries(selectedFavorite.transportationData).length > 0 && (
-                    <div>
-                      <h3 className="text-md font-semibold mb-3">Transportation Options</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {Object.entries(selectedFavorite.transportationData).map(([mode, data]) => {
-                          if (data && typeof data.distance === 'number' && typeof data.duration === 'number') {
+                    )}
+                    
+                    {/* Transportation Options */}
+                    {/* {selectedFavorite.transportationData && Object.entries(selectedFavorite.transportationData).length > 0 && (
+                      <div className="bg-accent/10 p-4 rounded-lg">
+                        <h3 className="text-md font-semibold mb-3">Transportation Options</h3>
+                        <div className="space-y-3">
+                          {Object.entries(selectedFavorite.transportationData).map(([mode, data]) => {
+                            if (!data) return null;
                             return (
-                              <div key={mode} className="bg-background/50 p-3 rounded-lg">
-                                <div className="flex items-center gap-2 mb-2">
-                                  {mode === 'driving-car' && <Car className="h-4 w-4 text-primary" />}
-                                  {mode === 'foot-walking' && <Footprints className="h-4 w-4 text-primary" />}
-                                  {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-primary" />}
+                              <div key={mode} className="flex items-center justify-between bg-background/50 p-3 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 rounded-full">
+                                    {mode === 'driving-car' && <Car className="h-5 w-5 text-blue-500" />}
+                                    {mode === 'foot-walking' && <Footprints className="h-5 w-5 text-green-500" />}
+                                    {mode === 'cycling-regular' && <Bike className="h-5 w-5 text-purple-500" />}
+                                  </div>
                                   <span className="font-medium capitalize">
                                     {mode.replace('-', ' ').replace('driving ', '').replace('foot ', '').replace('regular', '')}
                                   </span>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                  {formatDistance(data.distance)} • {formatDuration(data.duration)}
-                                </p>
+                                <div className="text-sm text-muted-foreground">
+                                  <span>{formatDistance(data.distance)}</span>
+                                  <span className="mx-2">•</span>
+                                  <span>{formatDuration(data.duration)}</span>
+                                </div>
                               </div>
                             );
-                          }
-                        })}
+                          })}
+                        </div>
                       </div>
+                    )} */}
+                    
+                    {selectedFavorite.categories && selectedFavorite.categories.length > 0 && (
+                      <div>
+                        <h3 className="text-md font-semibold mb-3">Categories</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedFavorite.categories.map((category, index) => (
+                            <div 
+                              key={index} 
+                              className="bg-accent/20 px-3 py-1 rounded-full text-sm"
+                            >
+                              {category}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedFavorite.goodFor && selectedFavorite.goodFor.length > 0 && (
+                      <div>
+                        <h3 className="text-md font-semibold mb-3">Good For</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedFavorite.goodFor.map((item, index) => (
+                            <div 
+                              key={index} 
+                              className="bg-accent/20 px-3 py-1 rounded-full text-sm"
+                            >
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* View Full Details Button */}
+                    <div className="pt-4 flex justify-end">
+                      <Button 
+                        size="lg" 
+                        className="gap-2"
+                        onClick={() => {
+                          setOpenDetailDialog(false);
+                          setShowFullDetails(true);
+                        }}
+                      >
+                        <span>View Full Details</span>
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
-                  
-                  <div className="pt-4 flex justify-end">
-                    <Button 
-                      size="lg" 
-                      className="gap-2"
-                      onClick={() => {
-                        setOpenDetailDialog(false);
-                        setShowFullDetails(true);
-                      }}
-                    >
-                      <span>View Full Details</span>
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -872,7 +823,7 @@ export default function FavoritesPage() {
                 </div>
                 
                 <div className="space-y-8">
-                  {selectedFavorite.coordinates && (
+                   {selectedFavorite.coordinates && (
                     <div className="bg-accent/10 p-6 rounded-lg">
                       <h3 className="text-xl font-semibold mb-4">Weather Forecast</h3>
                       <div className="bg-background/50 rounded-lg p-4">
@@ -882,7 +833,7 @@ export default function FavoritesPage() {
                         />
                       </div>
                     </div>
-                  )}
+                  )} 
 
                   <div className="bg-accent/10 p-6 rounded-lg">
                     <h3 className="text-xl font-semibold mb-4">Additional Information</h3>

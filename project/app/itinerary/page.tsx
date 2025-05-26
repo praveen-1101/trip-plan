@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Calendar, Info, Trash2, Star, Clock, Navigation, ExternalLink, MapIcon, Filter, PlaneTakeoff, CloudRain, Thermometer, Users, X, RefreshCcw, Route, Car, Bus, Train, Footprints, DollarSign, Bike, Truck } from 'lucide-react';
+import { MapPin, Calendar, Info, Trash2, Star, Clock, Navigation, ExternalLink, MapIcon, Filter, PlaneTakeoff, CloudRain, Thermometer, Users, X, RefreshCcw, Route, Car, Bus, Train, Footprints, DollarSign, Bike, Truck, Share2 } from 'lucide-react';
 import Image from 'next/image';
 import { format, isBefore, isAfter, startOfDay } from 'date-fns';
 import Link from 'next/link';
@@ -115,7 +115,7 @@ export default function ItineraryPage() {
               placeDescription: item.placeDescription || 'No description available',
               placeLocation: item.placeLocation || 'Unknown Location',
               placeImage: (item.placeImage && item.placeImage !== 'undefined') ? item.placeImage : '/placeholder.jpg',
-              temperature: item.temperature || 'Moderate',
+              temperature: item.temperature || 'N/A',
               weatherForecast: item.weatherForecast || { main: {}, weather: [] },
               crowdLevel: item.crowdLevel || 'Moderate',
               bestRoutes: item.bestRoutes || [],
@@ -449,7 +449,7 @@ export default function ItineraryPage() {
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {groupedItinerary[date].map((item) => (
-                  <Card key={item._id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <Card key={item._id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
                     <div className="relative h-48">
                       <Image
                         src={item.placeImage || '/placeholder.jpg'}
@@ -467,7 +467,7 @@ export default function ItineraryPage() {
                       </div>
                     </div>
                     
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 flex-grow">
                       <div className="flex flex-wrap gap-2 mb-3">
                         {item.categories?.map((category, index) => (
                           <span 
@@ -507,6 +507,7 @@ export default function ItineraryPage() {
                         )}
                       </div>
 
+                      {/* Transportation Options */}
                       {/* {item.transportationData && Object.entries(item.transportationData).length > 0 && (
                         <div className="mt-4 space-y-2">
                           {Object.entries(item.transportationData).map(([mode, data]) => {
@@ -521,8 +522,10 @@ export default function ItineraryPage() {
                                     {mode.replace('-', ' ').replace('driving ', '').replace('foot ', '').replace('regular', '')}
                                   </span>
                                 </div>
-                                <div className="text-sm text-muted-foreground">
-                                  {formatDistance(data.distance)} • {formatDuration(data.duration)}
+                                <div className="text-sm group-hover:text-primary/80 transition-colors">
+                                  <span className="inline-block group-hover:scale-105 transition-transform">{formatDistance(data.distance)}</span>
+                                  <span className="mx-2">•</span>
+                                  <span className="inline-block group-hover:scale-105 transition-transform">{formatDuration(data.duration)}</span>
                                 </div>
                               </div>
                             );
@@ -531,17 +534,30 @@ export default function ItineraryPage() {
                       )} */}
                     </CardContent>
                     
-                    <CardFooter className="p-4 pt-0 flex justify-between items-center">
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(item)}>
-                          <Info className="h-4 w-4 mr-2" />
-                          View Details
+                    <CardFooter className="p-4 pt-0 mt-auto border-t">
+                      <div className="flex justify-between items-center w-full">
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleViewDetail(item)}>
+                            <Info className="h-4 w-4 mr-2" />
+                            View Details
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setShowFullDetails(true);
+                            }}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View Full Details
+                          </Button>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => removeItineraryItem(item._id)}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove
                         </Button>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => removeItineraryItem(item._id)}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Remove
-                      </Button>
                     </CardFooter>
                   </Card>
                 ))}
@@ -563,15 +579,33 @@ export default function ItineraryPage() {
                   alt={selectedItem.placeName}
                   fill
                   className="object-cover"
+                  priority
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.jpg';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute top-2 right-2">
+                  <Button 
+                    size="icon" 
+                    variant="destructive"
+                    className="h-8 w-8 rounded-full bg-background/80"
+                    onClick={() => {
+                      removeItineraryItem(selectedItem._id);
+                      setOpenDetailDialog(false);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                   <h2 className="text-3xl font-bold mb-2">{selectedItem.placeName}</h2>
                   <div className="flex items-center gap-2 text-lg">
                     <MapPin className="h-5 w-5" />
                     <span>{selectedItem.placeLocation}</span>
                   </div>
-                  {selectedItem.rating && (
+                  {selectedItem.rating && selectedItem.rating > 0 && (
                     <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-lg p-2 inline-flex items-center">
                       <Star className="h-5 w-5 text-yellow-400 fill-current mr-1" />
                       <span className="font-semibold">{selectedItem.rating.toFixed(1)}</span>
@@ -581,76 +615,165 @@ export default function ItineraryPage() {
               </div>
 
               {/* Right side - Details */}
-              <div className="p-6 overflow-y-auto">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">Description</h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {selectedItem.placeDescription}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                      <h4 className="text-lg font-semibold mb-2">Best Time to Visit</h4>
-                      <p className="text-gray-600 dark:text-gray-400">{selectedItem.bestTimeToVisit}</p>
+              <div className="h-full flex flex-col">
+                <div className="p-6 overflow-y-auto flex-grow">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">Description</h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        {selectedItem.placeDescription}
+                      </p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                      <h4 className="text-lg font-semibold mb-2">Duration</h4>
-                      <p className="text-gray-600 dark:text-gray-400">{selectedItem.duration}</p>
-                    </div>
-                  </div>
 
-                  {selectedItem.transportationData && Object.entries(selectedItem.transportationData).length > 0 && (
-                    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                      <h4 className="text-lg font-semibold mb-2">Transportation Options</h4>
-                      <div className="space-y-2">
-                        {Object.entries(selectedItem.transportationData).map(([mode, data]) => {
-                          if (!data) return null;
-                          return (
-                          <div key={mode} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-full bg-gray-100 dark:bg-gray-800">
-                                {mode === 'driving-car' && <Car className="h-5 w-5" />}
-                                {mode === 'foot-walking' && <Footprints className="h-5 w-5" />}
-                                {mode === 'cycling-regular' && <Bike className="h-5 w-5" />}
+                    {/* Weather and Temperature Information */}
+                    {(selectedItem.temperature || selectedItem.weatherForecast) && (
+                      <div className="bg-accent/10 p-4 rounded-lg">
+                        <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <CloudRain className="h-5 w-5 text-blue-500" />
+                          Weather Information
+                        </h4>
+                        <div className="space-y-3">
+                          {selectedItem.temperature && (
+                            <div className="flex items-center justify-between bg-background/50 p-3 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-full bg-orange-500/10">
+                                  <Thermometer className="h-5 w-5 text-orange-500" />
+                                </div>
+                                <span className="font-medium">Temperature</span>
                               </div>
-                              <span className="font-medium">
-                                {mode === 'driving-car' ? 'Car' : 
-                                 mode === 'foot-walking' ? 'Walk' : 
-                                 mode === 'cycling-regular' ? 'Bike' : mode}
-                              </span>
+                              <div className="text-sm text-muted-foreground">
+                             {selectedItem.temperature && typeof selectedItem.temperature === 'number' ? `${selectedItem.temperature}°C` : 'N/A'}
+                              </div>
                             </div>
-                            <div className="text-gray-600 dark:text-gray-400">
-                              {formatDistance(data.distance)} • {formatDuration(data.duration)}
+                          )}
+                          {selectedItem.weatherForecast?.weather?.[0] && (
+                            <div className="flex items-center justify-between bg-background/50 p-3 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-full bg-blue-500/10">
+                                  <CloudRain className="h-5 w-5 text-blue-500" />
+                                </div>
+                                <span className="font-medium">Weather</span>
+                              </div>
+                              <div className="text-sm text-muted-foreground capitalize">
+                                <span>{selectedItem.weatherForecast.weather[0].description}</span>
+                              </div>
                             </div>
-                          </div>
-                          );
-                        })}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                      <h4 className="text-lg font-semibold mb-2">Categories</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedItem.categories.map((category) => (
-                          <span key={category} className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-sm">
-                            {category}
-                          </span>
-                        ))}
+                    {/* Weather Chart */}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-accent/10 p-4 rounded-lg">
+                        <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Users className="h-5 w-5 text-purple-500" />
+                          Categories
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedItem.categories.map((category) => (
+                            <span key={category} className="px-3 py-1 bg-purple-500/20 text-purple-500 rounded-full text-sm">
+                              {category}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="bg-accent/10 p-4 rounded-lg">
+                        <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Users className="h-5 w-5 text-green-500" />
+                          Good For
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedItem.goodFor.map((item) => (
+                            <span key={item} className="px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-sm">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                      <h4 className="text-lg font-semibold mb-2">Good For</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedItem.goodFor.map((item) => (
-                          <span key={item} className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-sm">
-                            {item}
-                          </span>
-                        ))}
+                    {/* {selectedItem.coordinates && (
+                      <div className="w-full bg-background/50 p-4 rounded-lg">
+                        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <CloudRain className="h-4 w-4 text-blue-500" />
+                          Weather Forecast
+                        </h4>
+                        <div className="h-[200px] w-full">
+                          <WeatherChart 
+                            lat={selectedItem.coordinates.lat} 
+                            lng={selectedItem.coordinates.lng}
+                          />
+                        </div>
                       </div>
+                    )} */}
+
+                    {/* Transportation Options */}
+                    {/* {selectedItem.transportationData && Object.entries(selectedItem.transportationData).length > 0 && (
+                      <div className="bg-accent/10 p-4 rounded-lg">
+                        <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <Route className="h-5 w-5 text-primary" />
+                          Transportation Options
+                        </h4>
+                        <div className="space-y-3">
+                          {Object.entries(selectedItem.transportationData).map(([mode, data]) => {
+                            if (!data) return null;
+                            return (
+                              <div key={mode} className="flex items-center justify-between bg-background/50 p-3 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 rounded-full">
+                                    {mode === 'driving-car' && <Car className="h-5 w-5 text-blue-500" />}
+                                    {mode === 'foot-walking' && <Footprints className="h-5 w-5 text-green-500" />}
+                                    {mode === 'cycling-regular' && <Bike className="h-5 w-5 text-purple-500" />}
+                                  </div>
+                                  <span className="font-medium capitalize">
+                                    {mode.replace('-', ' ').replace('driving ', '').replace('foot ', '').replace('regular', '')}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  <span>{formatDistance(data.distance)}</span>
+                                  <span className="mx-2">•</span>
+                                  <span>{formatDuration(data.duration)}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )} */}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-accent/10 p-4 rounded-lg">
+                        <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Calendar className="h-5 w-5 text-purple-500" />
+                          Best Time to Visit
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.bestTimeToVisit}</p>
+                      </div>
+                      <div className="bg-accent/10 p-4 rounded-lg">
+                        <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Clock className="h-5 w-5 text-blue-500" />
+                          Duration
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.duration}</p>
+                      </div>
+                    </div>
+
+                  
+
+                    {/* View Full Details Button */}
+                    <div className="pt-4 flex justify-end ">
+                      <Button 
+                        size="lg" 
+                        className="gap-2"
+                        onClick={() => {
+                          setOpenDetailDialog(false);
+                          setShowFullDetails(true);
+                        }}
+                      >
+                        <span>View Full Details</span>
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -658,6 +781,196 @@ export default function ItineraryPage() {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Full Details View */}
+      {showFullDetails && selectedItem && (
+        <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 overflow-y-auto">
+          <div className="container max-w-7xl mx-auto p-6 min-h-screen">
+            <div className="bg-card rounded-lg shadow-lg p-8 space-y-8">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-3xl font-bold mb-2">{selectedItem.placeName}</h2>
+                  <p className="text-lg text-muted-foreground">{selectedItem.placeDescription}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => {
+                      const url = `${window.location.origin}/explore?place=${selectedItem.placeId}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success('Link copied to clipboard!');
+                    }}
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => setShowFullDetails(false)}>
+                    <X className="h-6 w-6" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-8">
+                  <div className="relative h-[400px] rounded-lg overflow-hidden">
+                    <Image
+                      src={selectedItem.placeImage || '/placeholder.jpg'}
+                      alt={selectedItem.placeName}
+                      fill
+                      className="object-cover"
+                      priority
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder.jpg';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                      <div className="flex items-center gap-2 text-lg">
+                        <MapPin className="h-5 w-5" />
+                        <span>{selectedItem.placeLocation}</span>
+                      </div>
+                      {selectedItem.rating && selectedItem.rating > 0 && (
+                        <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-lg p-2 inline-flex items-center">
+                          <Star className="h-5 w-5 text-yellow-400 fill-current mr-1" />
+                          <span className="font-semibold">{selectedItem.rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-accent/10 p-6 rounded-lg">
+                    <h3 className="text-xl font-semibold mb-4">Location Details</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-6 w-6 text-blue-500" />
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Location</p>
+                          <p className="text-lg">{selectedItem.placeLocation}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-6 w-6 text-purple-500" />
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Best Time to Visit</p>
+                          <p className="text-lg">{selectedItem.bestTimeToVisit}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-6 w-6 text-blue-500" />
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Duration</p>
+                          <p className="text-lg">{selectedItem.duration}</p>
+                        </div>
+                      </div>
+                      {selectedItem.crowdLevel && (
+                        <div className="flex items-center gap-3">
+                          <Users className="h-6 w-6 text-purple-500" />
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Crowd Level</p>
+                            <p className="text-lg">{selectedItem.crowdLevel}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-8">
+                  {selectedItem.coordinates && (
+                    <div className="bg-accent/10 p-6 rounded-lg">
+                      <h3 className="text-xl font-semibold mb-4">Weather Forecast</h3>
+                      <div className="bg-background/50 rounded-lg p-4">
+                        <WeatherChart 
+                          lat={selectedItem.coordinates.lat} 
+                          lng={selectedItem.coordinates.lng} 
+                        />
+                      </div>
+                      {selectedItem.temperature && (
+                        <div className="mt-4 flex items-center justify-between bg-background/50 p-3 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-orange-500/10">
+                              <Thermometer className="h-5 w-5 text-orange-500" />
+                            </div>
+                            <span className="font-medium">Current Temperature</span>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            <span>{selectedItem.temperature}°C</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="bg-accent/10 p-6 rounded-lg">
+                    <h3 className="text-xl font-semibold mb-4">Additional Information</h3>
+                    <div className="space-y-6">
+                      {selectedItem.categories && selectedItem.categories.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Categories</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedItem.categories.map((category, index) => (
+                              <span 
+                                key={index}
+                                className="px-3 py-1 bg-purple-500/10 text-purple-500 rounded-full text-sm"
+                              >
+                                {category}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {selectedItem.goodFor && selectedItem.goodFor.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Good For</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedItem.goodFor.map((item, index) => (
+                              <span 
+                                key={index}
+                                className="px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-sm"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedItem.transportationData && Object.entries(selectedItem.transportationData).length > 0 && (
+                        <div>
+                          <h3 className="text-md font-semibold mb-3">Transportation Options</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {Object.entries(selectedItem.transportationData).map(([mode, data]) => {
+                              if (data && typeof data.distance === 'number' && typeof data.duration === 'number') {
+                                return (
+                                  <div key={mode} className="bg-background/50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      {mode === 'driving-car' && <Car className="h-4 w-4 text-blue-500" />}
+                                      {mode === 'foot-walking' && <Footprints className="h-4 w-4 text-green-500" />}
+                                      {mode === 'cycling-regular' && <Bike className="h-4 w-4 text-purple-500" />}
+                                      <span className="font-medium capitalize">
+                                        {mode.replace('-', ' ').replace('driving ', '').replace('foot ', '').replace('regular', '')}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {formatDistance(data.distance)} • {formatDuration(data.duration)}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -90,6 +90,22 @@ export function AttractionDetailDialog({
         return;
       }
 
+      const storageKey = `transportData_${attraction.id}_${userLocation.lat}_${userLocation.lng}`; // Unique key including user location
+      let dataLoadedFromStorage = false;
+
+      if (typeof window !== 'undefined' && localStorage.getItem(storageKey)) {
+        try {
+          const storedData = JSON.parse(localStorage.getItem(storageKey)!);
+          setTransportData(storedData);
+          setLoading(false); // No need to show loading if data is instantly available
+          console.log('Loaded transportation data from localStorage for', attraction.name);
+          dataLoadedFromStorage = true;
+        } catch (e) {
+          console.error('Failed to parse stored transport data, clearing it:', e);
+          localStorage.removeItem(storageKey); // Clear corrupted data
+        }
+      }
+      if (!dataLoadedFromStorage) {
       setLoading(true);
       setError(null);
       setTransportData(null);
@@ -98,7 +114,10 @@ export function AttractionDetailDialog({
         // Call the new getAllTransportationOptions function
         const fetchedData = await getAllTransportationOptions(userLocation, attraction.coordinates);
         setTransportData(fetchedData); // Store the entire record
-
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(storageKey, JSON.stringify(fetchedData)); // Store the fetched data
+          console.log('Fetched and stored new transportation data for', attraction.name);
+        }
         // Determine the recommended mode based on the fetched data
       /*   setRecommendedMode(getRecommendedMode(fetchedData)); */
 
@@ -109,9 +128,9 @@ export function AttractionDetailDialog({
         setLoading(false);
       }
     }
-
+    }
     fetchRoutes();
-  }, [open, userLocation,attraction.coordinates]);
+  }, [open, userLocation,attraction.coordinates, attraction.id]);
   // Transform attraction.transportOptions (array) into a Record<TransportMode, RouteInfo | null>
   // for compatibility with getRecommendedMode. Use useMemo to re-calculate only if attraction.transportOptions changes.
 
@@ -231,7 +250,7 @@ export function AttractionDetailDialog({
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <span>Good for: {attraction.goodFor.join(', ')}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
+                    {/* <div className="flex items-center gap-2 text-sm">
                       <div className="flex gap-0.5">
                         {Array.from({ length: 3 }).map((_, i) => (
                           <span 
@@ -247,7 +266,7 @@ export function AttractionDetailDialog({
                         ))}
                       </div>
                       <span className="text-muted-foreground text-xs">Price Level</span>
-                    </div>
+                    </div> */}
                   </div>
                   
                   <div>
