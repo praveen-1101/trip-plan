@@ -1,4 +1,3 @@
-'use client';
 
 import { getTouristPlaces } from './places';
 import { getWeatherData, getForecast } from './weather';
