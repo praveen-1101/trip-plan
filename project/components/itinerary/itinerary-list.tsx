@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Calendar, MapPin, Clock, Trash2, Car, Truck, Bike, Walk } from "lucide-react";
+import { Calendar, MapPin, Clock, Trash2, Car, Truck, Bike, Footprints } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { formatDistance, formatDuration, type TransportMode } from "@/lib/openroute";
+import { formatDistance, formatDuration } from "@/lib/openroute";
+import { TransportMode } from "@/types/transportation";
 
 interface ItineraryItem {
   _id: string;
@@ -29,14 +30,12 @@ interface GroupedItinerary {
 
 const transportIcons: Record<TransportMode, React.ReactNode> = {
   "driving-car": <Car className="h-4 w-4" />,
-  "driving-hgv": <Truck className="h-4 w-4" />,
   "cycling-regular": <Bike className="h-4 w-4" />,
-  "foot-walking": <Walk className="h-4 w-4" />,
+  "foot-walking": <Footprints className="h-4 w-4" />,
 };
 
 const transportLabels: Record<TransportMode, string> = {
   "driving-car": "Car",
-  "driving-hgv": "Truck",
   "cycling-regular": "Bike",
   "foot-walking": "Walk",
 };
