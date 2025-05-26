@@ -1,4 +1,4 @@
-'use client';
+/* 'use client';
 
 import { useState, useEffect } from 'react';
 import { Attraction } from '@/types/attractions';
@@ -15,8 +15,6 @@ export function MapView({ attractions }: MapViewProps) {
   const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
   const [openDetailId, setOpenDetailId] = useState<string | null>(null);
 
-  // In a real app, we would use a map library like Google Maps, Mapbox, or Leaflet
-  // For now, we'll create a simple placeholder that shows the idea
   
   const handleSelectAttraction = (attraction: Attraction) => {
     setSelectedAttraction(attraction);
@@ -31,7 +29,6 @@ export function MapView({ attractions }: MapViewProps) {
     <div className="flex flex-col h-[700px]">
       <Card className="flex-grow relative border">
         <CardContent className="p-0 h-full relative">
-          {/* Map placeholder - in real app, integrate with a mapping library */}
           <div 
             className="w-full h-full bg-accent/10 flex items-center justify-center relative"
             style={{
@@ -42,10 +39,8 @@ export function MapView({ attractions }: MapViewProps) {
           >
             <div className="absolute inset-0 bg-background/40 backdrop-blur-sm"></div>
             
-            {/* This would be replaced by actual map markers */}
             <div className="absolute inset-0 z-10">
               {attractions.map((attraction, index) => {
-                // Generate semi-random positions for the mock map
                 const top = 20 + (index * 15) % 60;
                 const left = 25 + (index * 20) % 60;
                 
@@ -120,4 +115,4 @@ export function MapView({ attractions }: MapViewProps) {
       )}
     </div>
   );
-}
+} */
