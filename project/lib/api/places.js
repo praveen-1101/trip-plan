@@ -17,7 +17,7 @@ export async function getTouristPlaces(lat, lon, radius = 5000, category = 'all'
       const openTripData = await openTripResponse.json();
       
       const startIndex = Math.floor(Math.random() * Math.max(0, openTripData.length - 10));
-      const selectedPlaces = openTripData.slice(startIndex, startIndex + 1);
+      const selectedPlaces = openTripData.slice(startIndex, startIndex + 5);
       
       for (const place of selectedPlaces) {
         const detailResponse = await fetch(
@@ -52,7 +52,7 @@ export async function getTouristPlaces(lat, lon, radius = 5000, category = 'all'
       const fsData = await fsResponse.json();
       
       const startIndex = Math.floor(Math.random() * Math.max(0, fsData.results.length - 10));
-      const selectedPlaces = fsData.results.slice(startIndex, startIndex + 1);
+      const selectedPlaces = fsData.results.slice(startIndex, startIndex + 5);
       
       places = await Promise.all(selectedPlaces.map(async (place) => {
         const photos = await getPlacePhotos(place.fsq_id, place.name, place.location.formatted_address);
